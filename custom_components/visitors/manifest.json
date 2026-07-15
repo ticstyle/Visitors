@@ -1,0 +1,10 @@
+{
+  "domain": "visitors",
+  "name": "Visitors",
+  "codeowners": ["@ticstyle"],
+  "config_flow": true,
+  "documentation": "https://github.com/ticstyle/Visitors",
+  "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/ticstyle/Visitors/issues",
+  "version": "1.0.0-beta.1"
+}
