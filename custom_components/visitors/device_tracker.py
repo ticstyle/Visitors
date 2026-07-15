@@ -46,7 +46,7 @@ class VisitorsVirtualTracker(TrackerEntity):
         self._title_slug = slugify(config_entry.title)
         self.entity_id = f"device_tracker.visitors_manual_{self._title_slug}"
         self._switch_entity_id = f"switch.visitors_manual_{self._title_slug}"
-        self._state = "not_home"
+        self._attr_location_name = "not_home"
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -57,13 +57,6 @@ class VisitorsVirtualTracker(TrackerEntity):
             manufacturer="ticstyle",
             model="Visitors",
         )
-
-    @property
-    def in_zones(self) -> list[str] | None:
-        """Return the zones the device is in."""
-        if self._state == self._zone_state_name:
-            return [self._zone]
-        return []
 
     @property
     def source_type(self) -> SourceType:
@@ -90,20 +83,7 @@ class VisitorsVirtualTracker(TrackerEntity):
         """Update the tracker state based on the companion switch."""
         switch_state = self.hass.states.get(self._switch_entity_id)
         if switch_state and switch_state.state == "on":
-            self._state = self._zone_state_name
+            self._attr_location_name = self._zone_state_name
         else:
-            self._state = "not_home"
-
-        # Dynamically create/sync a virtual person entity in the state machine.
-        # This forces HA's native zone occupancy count to update automatically.
-        in_zones_list = [self._zone] if self._state == self._zone_state_name else []
-        self.hass.states.async_set(
-            f"person.visitors_manual_{self._title_slug}",
-            self._state,
-            {
-                "friendly_name": f"Guests ({self._config_entry.title})",
-                "icon": "mdi:account-group",
-                "editable": False,
-                "in_zones": in_zones_list,
-            },
-        )
+            self._attr_location_name = "not_home"
+            
