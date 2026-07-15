@@ -10,7 +10,7 @@ from homeassistant.core import Event, EventStateChangedData, HomeAssistant, call
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
-from homeassistant.util.slugify import slugify
+from homeassistant.util import slugify
 
 from .const import CONF_ZONE, DEFAULT_ZONE, DOMAIN
 
@@ -91,3 +91,4 @@ class VisitorsVirtualTracker(TrackerEntity):
             self._state = self._zone_state_name
         else:
             self._state = "not_home"
+            
