@@ -126,9 +126,7 @@ class VisitorsSensor(SensorEntity):
             is_already_tracked = False
             for p_state in self.hass.states.async_all("person"):
                 # Ignore our own virtual entities to prevent false positive matches
-                if p_state.entity_id.startswith(
-                    "person.visitors_"
-                ) or p_state.entity_id.startswith("person.visitors_manual_"):
+                if p_state.entity_id.startswith("person.visitors_") or p_state.entity_id.startswith("person.visitors_manual_"):
                     continue
                 if p_state.attributes.get("source") == tracker_id:
                     is_already_tracked = True
@@ -137,12 +135,12 @@ class VisitorsSensor(SensorEntity):
             if not is_already_tracked:
                 target_state = state.state if state else "not_home"
                 friendly_name = (
-                    state.attributes.get(
-                        "friendly_name", tracker_name.replace("_", " ").title()
-                    )
+                    state.attributes.get("friendly_name", tracker_name.replace("_", " ").title())
                     if state
                     else tracker_name.replace("_", " ").title()
                 )
+
+                in_zones_list = [self._zone] if target_state == self._zone_state_name else []
 
                 self.hass.states.async_set(
                     person_entity_id,
@@ -151,6 +149,7 @@ class VisitorsSensor(SensorEntity):
                         "friendly_name": f"Guest ({friendly_name})",
                         "icon": "mdi:account-badge",
                         "editable": False,
+                        "in_zones": in_zones_list,
                     },
                 )
             else:
@@ -164,10 +163,8 @@ class VisitorsSensor(SensorEntity):
             if t_id != manual_tracker_id
         }
         for state in self.hass.states.async_all("person"):
-            if (
-                state.entity_id.startswith("person.visitors_tracker_")
-                and state.entity_id not in active_person_ids
-            ):
+            if state.entity_id.startswith("person.visitors_tracker_") and state.entity_id not in active_person_ids:
                 self.hass.states.async_remove(state.entity_id)
 
         self._state = count
+        
