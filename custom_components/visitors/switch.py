@@ -8,7 +8,11 @@ from typing import Any
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util.slugify import slugify
+
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,8 +38,19 @@ class VisitorsManualSwitch(SwitchEntity):
         """Initialize the switch."""
         self._config_entry = config_entry
         self._attr_unique_id = f"{config_entry.entry_id}_manual_switch"
-        self.entity_id = f"switch.visitors_manual_{config_entry.entry_id}"
+        title_slug = slugify(config_entry.title)
+        self.entity_id = f"switch.visitors_manual_{title_slug}"
         self._is_on = False
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device registry information for this entity."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._config_entry.entry_id)},
+            name=self._config_entry.title,
+            manufacturer="Visitors",
+            model="Visitor Tracker",
+        )
 
     @property
     def is_on(self) -> bool:
