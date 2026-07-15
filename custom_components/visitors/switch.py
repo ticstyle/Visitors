@@ -10,7 +10,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util.slugify import slugify
+from homeassistant.util import slugify
 
 from .const import DOMAIN
 
@@ -66,3 +66,4 @@ class VisitorsManualSwitch(SwitchEntity):
         """Turn the entity off."""
         self._is_on = False
         self.async_write_ha_state()
+        
