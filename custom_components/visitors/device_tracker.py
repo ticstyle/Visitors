@@ -103,4 +103,3 @@ class VisitorsVirtualTracker(TrackerEntity):
                 "editable": False,
             },
         )
-        
