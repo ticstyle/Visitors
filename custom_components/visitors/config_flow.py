@@ -94,9 +94,7 @@ class VisitorsOptionsFlowHandler(OptionsFlow):
 
         options_schema = vol.Schema(
             {
-                vol.Required(
-                    CONF_ZONE, default=current_zone
-                ): selector.EntitySelector(
+                vol.Required(CONF_ZONE, default=current_zone): selector.EntitySelector(
                     selector.EntitySelectorConfig(domain="zone")
                 ),
                 vol.Optional(
@@ -110,4 +108,3 @@ class VisitorsOptionsFlowHandler(OptionsFlow):
         )
 
         return self.async_show_form(step_id="init", data_schema=options_schema)
-        
