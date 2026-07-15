@@ -13,7 +13,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.util import slugify
 
-from .const import CONF_CREATE_MANUAL, CONF_TRACKERS, CONF_ZONE, DOMAIN
+from .const import CONF_TRACKERS, CONF_ZONE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,17 +28,13 @@ async def async_setup_entry(
     trackers = config_entry.options.get(
         CONF_TRACKERS, config_entry.data.get(CONF_TRACKERS, [])
     )
-    create_manual = config_entry.options.get(
-        CONF_CREATE_MANUAL, config_entry.data.get(CONF_CREATE_MANUAL, True)
-    )
 
     tracked_entities = list(trackers)
-    # If the manual override tracker is active, ensure we track it
-    if create_manual:
-        title_slug = slugify(config_entry.title)
-        manual_tracker_id = f"device_tracker.visitors_manual_{title_slug}"
-        if manual_tracker_id not in tracked_entities:
-            tracked_entities.append(manual_tracker_id)
+    # Always append our companion manual guest tracker to our monitoring checklist
+    title_slug = slugify(config_entry.title)
+    manual_tracker_id = f"device_tracker.visitors_manual_{title_slug}"
+    if manual_tracker_id not in tracked_entities:
+        tracked_entities.append(manual_tracker_id)
 
     sensor = VisitorsSensor(config_entry, zone, tracked_entities)
     async_add_entities([sensor], update_before_add=True)
@@ -116,3 +112,4 @@ class VisitorsSensor(SensorEntity):
             if state and state.state == self._zone_state_name:
                 count += 1
         self._state = count
+        
