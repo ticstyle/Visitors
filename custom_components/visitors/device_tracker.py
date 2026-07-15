@@ -107,4 +107,3 @@ class VisitorsVirtualTracker(TrackerEntity):
                 "in_zones": in_zones_list,
             },
         )
-        
