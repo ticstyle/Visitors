@@ -102,9 +102,7 @@ class VisitorsOptionsFlowHandler(OptionsFlow):
 
         options_schema = vol.Schema(
             {
-                vol.Required(
-                    CONF_ZONE, default=current_zone
-                ): selector.EntitySelector(
+                vol.Required(CONF_ZONE, default=current_zone): selector.EntitySelector(
                     selector.EntitySelectorConfig(domain="zone")
                 ),
                 vol.Optional(
