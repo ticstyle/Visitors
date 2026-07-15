@@ -8,10 +8,12 @@ from typing import Any
 from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.util.slugify import slugify
 
-from .const import CONF_CREATE_MANUAL, CONF_TRACKERS, CONF_ZONE
+from .const import CONF_CREATE_MANUAL, CONF_TRACKERS, CONF_ZONE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,7 +35,8 @@ async def async_setup_entry(
     tracked_entities = list(trackers)
     # If the manual override tracker is active, ensure we track it
     if create_manual:
-        manual_tracker_id = f"device_tracker.visitors_manual_{config_entry.entry_id}"
+        title_slug = slugify(config_entry.title)
+        manual_tracker_id = f"device_tracker.visitors_manual_{title_slug}"
         if manual_tracker_id not in tracked_entities:
             tracked_entities.append(manual_tracker_id)
 
@@ -64,6 +67,16 @@ class VisitorsSensor(SensorEntity):
         # Extract location state name from zone entity ID (e.g., zone.home -> home)
         self._zone_state_name = zone.split(".")[-1] if zone else "home"
         self._state: int | None = None
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device registry information for this entity."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._config_entry.entry_id)},
+            name=self._config_entry.title,
+            manufacturer="Visitors",
+            model="Visitor Tracker",
+        )
 
     @property
     def native_value(self) -> int | None:
