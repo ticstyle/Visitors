@@ -19,7 +19,6 @@ from .const import (
     CONF_CREATE_MANUAL,
     CONF_TRACKERS,
     CONF_ZONE,
-    DEFAULT_NAME,
     DEFAULT_ZONE,
     DOMAIN,
 )
@@ -37,12 +36,18 @@ class VisitorsConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            title = user_input.get("name", DEFAULT_NAME)
+            zone_id = user_input[CONF_ZONE]
+            zone_state = self.hass.states.get(zone_id)
+            zone_name = (
+                zone_state.attributes.get("friendly_name")
+                if zone_state and zone_state.attributes.get("friendly_name")
+                else zone_id.split(".")[-1].replace("_", " ").title()
+            )
+            title = f"Visitors at {zone_name}"
             return self.async_create_entry(title=title, data=user_input)
 
         data_schema = vol.Schema(
             {
-                vol.Required("name", default=DEFAULT_NAME): str,
                 vol.Required(CONF_ZONE, default=DEFAULT_ZONE): selector.EntitySelector(
                     selector.EntitySelectorConfig(domain="zone")
                 ),
@@ -97,7 +102,9 @@ class VisitorsOptionsFlowHandler(OptionsFlow):
 
         options_schema = vol.Schema(
             {
-                vol.Required(CONF_ZONE, default=current_zone): selector.EntitySelector(
+                vol.Required(
+                    CONF_ZONE, default=current_zone
+                ): selector.EntitySelector(
                     selector.EntitySelectorConfig(domain="zone")
                 ),
                 vol.Optional(
