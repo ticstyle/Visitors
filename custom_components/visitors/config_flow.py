@@ -16,7 +16,6 @@ from homeassistant.core import callback
 from homeassistant.helpers import selector
 
 from .const import (
-    CONF_CREATE_MANUAL,
     CONF_TRACKERS,
     CONF_ZONE,
     DEFAULT_ZONE,
@@ -56,9 +55,6 @@ class VisitorsConfigFlow(ConfigFlow, domain=DOMAIN):
                         domain="device_tracker", multiple=True
                     )
                 ),
-                vol.Required(
-                    CONF_CREATE_MANUAL, default=True
-                ): selector.BooleanSelector(),
             }
         )
 
@@ -95,14 +91,12 @@ class VisitorsOptionsFlowHandler(OptionsFlow):
         current_trackers = self._config_entry.options.get(
             CONF_TRACKERS, self._config_entry.data.get(CONF_TRACKERS, [])
         )
-        current_create_manual = self._config_entry.options.get(
-            CONF_CREATE_MANUAL,
-            self._config_entry.data.get(CONF_CREATE_MANUAL, True),
-        )
 
         options_schema = vol.Schema(
             {
-                vol.Required(CONF_ZONE, default=current_zone): selector.EntitySelector(
+                vol.Required(
+                    CONF_ZONE, default=current_zone
+                ): selector.EntitySelector(
                     selector.EntitySelectorConfig(domain="zone")
                 ),
                 vol.Optional(
@@ -112,10 +106,8 @@ class VisitorsOptionsFlowHandler(OptionsFlow):
                         domain="device_tracker", multiple=True
                     )
                 ),
-                vol.Required(
-                    CONF_CREATE_MANUAL, default=current_create_manual
-                ): selector.BooleanSelector(),
             }
         )
 
         return self.async_show_form(step_id="init", data_schema=options_schema)
+        
