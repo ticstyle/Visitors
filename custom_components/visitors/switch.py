@@ -66,4 +66,3 @@ class VisitorsManualSwitch(SwitchEntity):
         """Turn the entity off."""
         self._is_on = False
         self.async_write_ha_state()
-        
