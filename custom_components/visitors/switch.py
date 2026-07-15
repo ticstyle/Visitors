@@ -48,8 +48,8 @@ class VisitorsManualSwitch(SwitchEntity):
         return DeviceInfo(
             identifiers={(DOMAIN, self._config_entry.entry_id)},
             name=self._config_entry.title,
-            manufacturer="Visitors",
-            model="Visitor Tracker",
+            manufacturer="ticstyle",
+            model="Visitors",
         )
 
     @property
