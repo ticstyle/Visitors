@@ -59,9 +59,11 @@ class VisitorsVirtualTracker(TrackerEntity):
         )
 
     @property
-    def location_name(self) -> str:
-        """Return the location name of the device."""
-        return self._state
+    def in_zones(self) -> list[str] | None:
+        """Return the zones the device is in."""
+        if self._state == self._zone_state_name:
+            return [self._zone]
+        return []
 
     @property
     def source_type(self) -> SourceType:
@@ -94,6 +96,7 @@ class VisitorsVirtualTracker(TrackerEntity):
 
         # Dynamically create/sync a virtual person entity in the state machine.
         # This forces HA's native zone occupancy count to update automatically.
+        in_zones_list = [self._zone] if self._state == self._zone_state_name else []
         self.hass.states.async_set(
             f"person.visitors_manual_{self._title_slug}",
             self._state,
@@ -101,5 +104,7 @@ class VisitorsVirtualTracker(TrackerEntity):
                 "friendly_name": f"Guests ({self._config_entry.title})",
                 "icon": "mdi:account-group",
                 "editable": False,
+                "in_zones": in_zones_list,
             },
         )
+        
