@@ -1,7 +1,7 @@
 # Visitors
 
 <p align="center">
-  <img src="custom_components/visitors/brand/logo.png" alt="Visitors Logo" width="600">
+  <img src="custom_components/visitors/brand/logo.png" alt="Visitors Logo" width="800">
 </p>
 
   ![Release](https://img.shields.io/github/v/release/ticstyle/Visitors?style=for-the-badge&color=blue)
