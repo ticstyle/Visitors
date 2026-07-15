@@ -86,4 +86,3 @@ class VisitorsVirtualTracker(TrackerEntity):
             self._attr_location_name = self._zone_state_name
         else:
             self._attr_location_name = "not_home"
-            
