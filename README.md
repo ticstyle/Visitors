@@ -1,18 +1,18 @@
 # Visitors
 
 <p align="center">
-  <img src="https://github.com/ticstyle/Visitors/custom_components/visitors/brand/logo.svg" alt="Visitors Logo" width="550">
+  <img src="custom_components/visitors/brand/logo.svg" alt="Visitors Logo" width="550">
 </p>
 
-  <img src="https://img.shields.io/github/v/release/ticstyle/Visitors?style=for-the-badge&color=blue" alt="Release">
-  <img src="https://img.shields.io/badge/Home%20Assistant-Custom%20Integration-blue?style=for-the-badge&logo=home-assistant" alt="HA Integration">
-  <a href="https://github.com/ticstyle/Visitors/actions/workflows/pipeline.yml"><img src="https://img.shields.io/github/actions/workflow/status/ticstyle/Visitors/pipeline.yml?branch=main&job=hassfest&label=Hassfest&style=for-the-badge" alt="Hassfest"></a>
-  <a href="https://github.com/ticstyle/Visitors/actions/workflows/pipeline.yml"><img src="https://img.shields.io/github/actions/workflow/status/ticstyle/Visitors/pipeline.yml?branch=main&job=hacs&label=HACS&style=for-the-badge" alt="HACS Validation"></a>
-  <a href="https://github.com/ticstyle/Visitors/actions/workflows/pipeline.yml"><img src="https://img.shields.io/github/actions/workflow/status/ticstyle/Visitors/pipeline.yml?branch=main&job=sync_and_format&label=Ruff%20%2F%20Format&style=for-the-badge" alt="Ruff / Format"></a>
-  <a href="https://github.com/ticstyle/Visitors/actions/workflows/pipeline.yml"><img src="https://img.shields.io/github/actions/workflow/status/ticstyle/Visitors/pipeline.yml?branch=main&job=mypy&label=Mypy&style=for-the-badge" alt="Mypy"></a>
-  <img src="https://img.shields.io/github/license/ticstyle/Visitors?style=for-the-badge" alt="License">
-  <img src="https://img.shields.io/badge/dynamic/json?style=for-the-badge&color=41BDF5&logo=home-assistant&label=installs&url=https%3A%2F%2Fanalytics.home-assistant.io%2Fcustom_integrations.json&query=%24.Visitors.total" alt="Installs">
-  <img src="https://img.shields.io/github/issues/ticstyle/Visitors?style=for-the-badge&color=orange" alt="Issues">
+  ![Release](https://img.shields.io/github/v/release/ticstyle/Visitors?style=for-the-badge&color=blue)
+  ![HA Integration](https://img.shields.io/badge/Home%20Assistant-Custom%20Integration-blue?style=for-the-badge&logo=home-assistant)
+  [![Hassfest](https://img.shields.io/github/actions/workflow/status/ticstyle/Visitors/pipeline.yml?branch=main&job=hassfest&label=Hassfest&style=for-the-badge)](https://github.com/ticstyle/Visitors/actions/workflows/pipeline.yml)
+  [![HACS Validation](https://img.shields.io/github/actions/workflow/status/ticstyle/Visitors/pipeline.yml?branch=main&job=hacs&label=HACS&style=for-the-badge)](https://github.com/ticstyle/Visitors/actions/workflows/pipeline.yml)
+  [![Ruff / Format](https://img.shields.io/github/actions/workflow/status/ticstyle/Visitors/pipeline.yml?branch=main&job=sync_and_format&label=Ruff%20%2F%20Format&style=for-the-badge)](https://github.com/ticstyle/Visitors/actions/workflows/pipeline.yml)
+  [![Mypy](https://img.shields.io/github/actions/workflow/status/ticstyle/Visitors/pipeline.yml?branch=main&job=mypy&label=Mypy&style=for-the-badge)](https://github.com/ticstyle/Visitors/actions/workflows/pipeline.yml)
+  ![License](https://img.shields.io/github/license/ticstyle/Visitors?style=for-the-badge)
+  ![Installs](https://img.shields.io/badge/dynamic/json?style=for-the-badge&color=41BDF5&logo=home-assistant&label=installs&url=https%3A%2F%2Fanalytics.home-assistant.io%2Fcustom_integrations.json&query=%24.Visitors.total)
+  ![Issues](https://img.shields.io/github/issues/ticstyle/Visitors?style=for-the-badge&color=orange)
 
 An elegant, lightweight Home Assistant custom integration to track guest occupancy without messy templates, groups, or hardcoded automations. **Visitors** dynamically aggregates any selection of physical device trackers alongside a virtual guest presence helper to give you a single, reliable state metric representing the exact number of visitors currently inside a targeted zone.
 
