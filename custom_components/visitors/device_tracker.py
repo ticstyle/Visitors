@@ -91,4 +91,3 @@ class VisitorsVirtualTracker(TrackerEntity):
             self._state = self._zone_state_name
         else:
             self._state = "not_home"
-            
