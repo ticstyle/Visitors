@@ -7,10 +7,12 @@ import logging
 from homeassistant.components.device_tracker import SourceType, TrackerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.util.slugify import slugify
 
-from .const import CONF_ZONE, DEFAULT_ZONE
+from .const import CONF_ZONE, DEFAULT_ZONE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,9 +43,20 @@ class VisitorsVirtualTracker(TrackerEntity):
         self._zone = zone
         self._zone_state_name = zone.split(".")[-1] if zone else "home"
         self._attr_unique_id = f"{config_entry.entry_id}_manual_tracker"
-        self.entity_id = f"device_tracker.visitors_manual_{config_entry.entry_id}"
-        self._switch_entity_id = f"switch.visitors_manual_{config_entry.entry_id}"
+        title_slug = slugify(config_entry.title)
+        self.entity_id = f"device_tracker.visitors_manual_{title_slug}"
+        self._switch_entity_id = f"switch.visitors_manual_{title_slug}"
         self._state = "not_home"
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device registry information for this entity."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._config_entry.entry_id)},
+            name=self._config_entry.title,
+            manufacturer="Visitors",
+            model="Visitor Tracker",
+        )
 
     @property
     def location_name(self) -> str:
