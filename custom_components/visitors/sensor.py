@@ -105,74 +105,11 @@ class VisitorsSensor(SensorEntity):
             )
 
     async def async_update(self) -> None:
-        """Update the visitor count state and sync virtual person states."""
+        """Update the visitor count state."""
         count = 0
-        title_slug = slugify(self._config_entry.title)
-        manual_tracker_id = f"device_tracker.visitors_manual_{title_slug}"
-
         for tracker_id in self._trackers:
             state = self.hass.states.get(tracker_id)
             if state and state.state == self._zone_state_name:
                 count += 1
-
-            # Skip our manual tracker (it's updated in device_tracker.py directly)
-            if tracker_id == manual_tracker_id:
-                continue
-
-            tracker_name = tracker_id.split(".")[-1]
-            person_entity_id = f"person.visitors_tracker_{tracker_name}"
-
-            # Check if this tracker is already linked to a native HA resident person
-            is_already_tracked = False
-            for p_state in self.hass.states.async_all("person"):
-                # Ignore our own virtual entities to prevent false positive matches
-                if p_state.entity_id.startswith(
-                    "person.visitors_"
-                ) or p_state.entity_id.startswith("person.visitors_manual_"):
-                    continue
-                if p_state.attributes.get("source") == tracker_id:
-                    is_already_tracked = True
-                    break
-
-            if not is_already_tracked:
-                target_state = state.state if state else "not_home"
-                friendly_name = (
-                    state.attributes.get(
-                        "friendly_name", tracker_name.replace("_", " ").title()
-                    )
-                    if state
-                    else tracker_name.replace("_", " ").title()
-                )
-
-                in_zones_list = (
-                    [self._zone] if target_state == self._zone_state_name else []
-                )
-
-                self.hass.states.async_set(
-                    person_entity_id,
-                    target_state,
-                    {
-                        "friendly_name": f"Guest ({friendly_name})",
-                        "icon": "mdi:account-badge",
-                        "editable": False,
-                        "in_zones": in_zones_list,
-                    },
-                )
-            else:
-                # If a resident links it later, immediately clean up our duplicate
-                self.hass.states.async_remove(person_entity_id)
-
-        # Clean up any virtual visitor people whose trackers were removed from the options flow
-        active_person_ids = {
-            f"person.visitors_tracker_{t_id.split('.')[-1]}"
-            for t_id in self._trackers
-            if t_id != manual_tracker_id
-        }
-        for state in self.hass.states.async_all("person"):
-            if (
-                state.entity_id.startswith("person.visitors_tracker_")
-                and state.entity_id not in active_person_ids
-            ):
-                self.hass.states.async_remove(state.entity_id)
-
         self._state = count
+        
