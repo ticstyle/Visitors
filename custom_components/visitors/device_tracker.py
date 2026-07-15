@@ -43,9 +43,9 @@ class VisitorsVirtualTracker(TrackerEntity):
         self._zone = zone
         self._zone_state_name = zone.split(".")[-1] if zone else "home"
         self._attr_unique_id = f"{config_entry.entry_id}_manual_tracker"
-        title_slug = slugify(config_entry.title)
-        self.entity_id = f"device_tracker.visitors_manual_{title_slug}"
-        self._switch_entity_id = f"switch.visitors_manual_{title_slug}"
+        self._title_slug = slugify(config_entry.title)
+        self.entity_id = f"device_tracker.visitors_manual_{self._title_slug}"
+        self._switch_entity_id = f"switch.visitors_manual_{self._title_slug}"
         self._state = "not_home"
 
     @property
@@ -91,3 +91,16 @@ class VisitorsVirtualTracker(TrackerEntity):
             self._state = self._zone_state_name
         else:
             self._state = "not_home"
+
+        # Dynamically create/sync a virtual person entity in the state machine.
+        # This forces HA's native zone occupancy count to update automatically.
+        self.hass.states.async_set(
+            f"person.visitors_manual_{self._title_slug}",
+            self._state,
+            {
+                "friendly_name": f"Guests ({self._config_entry.title})",
+                "icon": "mdi:account-group",
+                "editable": False,
+            },
+        )
+        
