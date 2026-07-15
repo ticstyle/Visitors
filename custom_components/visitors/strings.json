@@ -5,7 +5,6 @@
         "title": "Configure Visitors Tracker",
         "description": "Set up a counter for your visiting guests based on selected device trackers.",
         "data": {
-          "name": "Name",
           "zone": "Zone to monitor",
           "trackers": "Device trackers to track",
           "create_manual": "Create a manual guest switch & tracker"
