@@ -11,7 +11,7 @@ from homeassistant.core import Event, EventStateChangedData, HomeAssistant, call
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 
-from .const import CONF_CREATE_MANUAL, CONF_TRACKERS, CONF_ZONE, DOMAIN
+from .const import CONF_CREATE_MANUAL, CONF_TRACKERS, CONF_ZONE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,9 +22,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Visitors sensor platform."""
-    zone = config_entry.options.get(
-        CONF_ZONE, config_entry.data.get(CONF_ZONE)
-    )
+    zone = config_entry.options.get(CONF_ZONE, config_entry.data.get(CONF_ZONE))
     trackers = config_entry.options.get(
         CONF_TRACKERS, config_entry.data.get(CONF_TRACKERS, [])
     )

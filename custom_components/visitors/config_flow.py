@@ -5,13 +5,19 @@ from __future__ import annotations
 from typing import Any
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import selector
 
-from .const import CONF_CREATE_MANUAL, CONF_TRACKERS, CONF_ZONE, DEFAULT_NAME, DEFAULT_ZONE, DOMAIN
+from .const import (
+    CONF_CREATE_MANUAL,
+    CONF_TRACKERS,
+    CONF_ZONE,
+    DEFAULT_NAME,
+    DEFAULT_ZONE,
+    DOMAIN,
+)
 
 
 class VisitorsConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -36,9 +42,13 @@ class VisitorsConfigFlow(ConfigFlow, domain=DOMAIN):
                     selector.EntitySelectorConfig(domain="zone")
                 ),
                 vol.Optional(CONF_TRACKERS, default=[]): selector.EntitySelector(
-                    selector.EntitySelectorConfig(domain="device_tracker", multiple=True)
+                    selector.EntitySelectorConfig(
+                        domain="device_tracker", multiple=True
+                    )
                 ),
-                vol.Required(CONF_CREATE_MANUAL, default=True): selector.BooleanSelector(),
+                vol.Required(
+                    CONF_CREATE_MANUAL, default=True
+                ): selector.BooleanSelector(),
             }
         )
 
@@ -83,10 +93,16 @@ class VisitorsOptionsFlowHandler(OptionsFlow):
                 vol.Required(CONF_ZONE, default=current_zone): selector.EntitySelector(
                     selector.EntitySelectorConfig(domain="zone")
                 ),
-                vol.Optional(CONF_TRACKERS, default=current_trackers): selector.EntitySelector(
-                    selector.EntitySelectorConfig(domain="device_tracker", multiple=True)
+                vol.Optional(
+                    CONF_TRACKERS, default=current_trackers
+                ): selector.EntitySelector(
+                    selector.EntitySelectorConfig(
+                        domain="device_tracker", multiple=True
+                    )
                 ),
-                vol.Required(CONF_CREATE_MANUAL, default=current_create_manual): selector.BooleanSelector(),
+                vol.Required(
+                    CONF_CREATE_MANUAL, default=current_create_manual
+                ): selector.BooleanSelector(),
             }
         )
 
