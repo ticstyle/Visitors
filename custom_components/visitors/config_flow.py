@@ -3,11 +3,16 @@
 from __future__ import annotations
 
 from typing import Any
+
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import selector
 
 from .const import (
@@ -27,7 +32,7 @@ class VisitorsConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial setup step."""
         errors: dict[str, str] = {}
 
@@ -68,29 +73,33 @@ class VisitorsOptionsFlowHandler(OptionsFlow):
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
-        self.config_entry = config_entry
+        # Store config entry privately to avoid conflicting with base class property
+        self._config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage the updated configuration options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
         # Retrieve current configuration or fall back to original data setup
-        current_zone = self.config_entry.options.get(
-            CONF_ZONE, self.config_entry.data.get(CONF_ZONE, DEFAULT_ZONE)
+        current_zone = self._config_entry.options.get(
+            CONF_ZONE, self._config_entry.data.get(CONF_ZONE, DEFAULT_ZONE)
         )
-        current_trackers = self.config_entry.options.get(
-            CONF_TRACKERS, self.config_entry.data.get(CONF_TRACKERS, [])
+        current_trackers = self._config_entry.options.get(
+            CONF_TRACKERS, self._config_entry.data.get(CONF_TRACKERS, [])
         )
-        current_create_manual = self.config_entry.options.get(
-            CONF_CREATE_MANUAL, self.config_entry.data.get(CONF_CREATE_MANUAL, True)
+        current_create_manual = self._config_entry.options.get(
+            CONF_CREATE_MANUAL,
+            self._config_entry.data.get(CONF_CREATE_MANUAL, True),
         )
 
         options_schema = vol.Schema(
             {
-                vol.Required(CONF_ZONE, default=current_zone): selector.EntitySelector(
+                vol.Required(
+                    CONF_ZONE, default=current_zone
+                ): selector.EntitySelector(
                     selector.EntitySelectorConfig(domain="zone")
                 ),
                 vol.Optional(
