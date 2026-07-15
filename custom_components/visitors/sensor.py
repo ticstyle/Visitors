@@ -112,4 +112,3 @@ class VisitorsSensor(SensorEntity):
             if state and state.state == self._zone_state_name:
                 count += 1
         self._state = count
-        
