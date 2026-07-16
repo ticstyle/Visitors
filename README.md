@@ -24,7 +24,7 @@ To add this integration, search for `Visitors` in HACS or add this repository cu
 
 * 📍 **Zone-Agnostic Aggregation:** Define which specific zone represents your target area (`zone.home` is set as default), allowing you to build dedicated trackers for vacation homes, work locations, or standard residences.
 * 👥 **Dynamic Tracker Binding:** Select any number of standard `device_tracker` entities to track. The parent sensor automatically monitors status shifts across all of them and counts how many are concurrently inside the selected zone boundaries.
-* 🛡️ **Dynamic Child Presence Sensors:** Automatically generates an individual binary sensor for every single selected device tracker. These entities listen live to upstream name updates, ensuring that if you rename a tracker, its display name updates instantly in the UI without breaking your entity IDs or automations.
+* 🛡️ **Dynamic Child Presence Sensors:** Automatically generates an individual binary sensor for every single selected device tracker. These entities utilize the native `presence` device class to display clean, localized **Home** / **Away** states, while listening live to upstream name updates so display profiles stay perfectly in sync.
 * 🔘 **Built-in Manual Guest Engine:** Need to track a visitor who doesn't have a device tracker integrated? The integration automatically spins up a dedicated manual companion switch and a virtual device tracker for each instance.
 * 🔀 **Composite Presence Logic:** The virtual guest device tracker intelligently turns `home` if the manual switch is flipped `on` **OR** if any of your monitored physical trackers arrive in the zone (even if the manual switch remains off).
 * 🧮 **Additive Counting Metrics:** The core sensor acts as a true mathematical sum, counting the manual switch as one visitor (when active) plus each chosen physical device tracker currently inside the zone (e.g. scales effortlessly from 0 to 19+ visitors).
@@ -83,7 +83,7 @@ The integration creates a unified device named **Visitors at <Zone Name>** holdi
 | `sensor.visitors_at_home` | Visitors at Home | `3` | Displays the total count of active guest device trackers in the zone + the manual switch status weight. |
 | `switch.visitors_at_home` | Manually set visitors at Home | `on` | A helper toggle switch to manually inject guest presence without a physical device tracker. |
 | `device_tracker.visitors_at_home` | Visitors at Home | `home` | A composite virtual device tracker driven by the manual switch state and active guest tracker arrivals. |
-| `binary_sensor.visitor_home_stacey_phone` | Stacey Phone at Home | `on` *(Connected)* | Individual status indicator for a specific guest device tracker within this zone. Tracks upstream names dynamically. |
+| `binary_sensor.visitor_home_stacey_phone` | Stacey Phone at Home | `on` *(Home)* | Individual status indicator for a specific guest device tracker within this zone. Native presence class maps translation to Home/Away. |
 
 ### Entity Attributes
 The core sensor entity exposes structural tracking metadata under its state attributes:
