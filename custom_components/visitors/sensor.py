@@ -35,11 +35,9 @@ async def async_setup_entry(
 
     # Fetch zone friendly name for custom explicit naming
     zone_state = hass.states.get(zone)
-    zone_name = (
-        zone_state.attributes.get("friendly_name")
-        if zone_state and zone_state.attributes.get("friendly_name")
-        else zone.split(".")[-1].replace("_", " ").title()
-    )
+    zone_name = zone.split(".")[-1].replace("_", " ").title()
+    if zone_state and isinstance(friendly_name := zone_state.attributes.get("friendly_name"), str):
+        zone_name = friendly_name
     zone_slug = slugify(zone_name)
 
     sensor = VisitorsSensor(config_entry, zone, zone_name, zone_slug, trackers)
@@ -131,3 +129,4 @@ class VisitorsSensor(SensorEntity):
             count += 1
 
         self._state = count
+        
