@@ -10,6 +10,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
@@ -34,6 +35,23 @@ async def async_setup_entry(
     if not isinstance(zone, str):
         _LOGGER.error("Monitored zone is missing or invalid")
         return
+
+    # Clean up orphaned binary sensor entities that were removed in the options flow
+    entity_reg = er.async_get(hass)
+    registered_entries = er.async_entries_for_config_entry(
+        entity_reg, config_entry.entry_id
+    )
+    current_unique_ids = {
+        f"{config_entry.entry_id}_binary_{tracker_id.split('.')[-1]}"
+        for tracker_id in trackers
+    }
+
+    for entry in registered_entries:
+        if entry.domain == "binary_sensor" and entry.unique_id.startswith(
+            f"{config_entry.entry_id}_binary_"
+        ):
+            if entry.unique_id not in current_unique_ids:
+                entity_reg.async_remove(entry.entity_id)
 
     zone_state = hass.states.get(zone)
     zone_name = zone.split(".")[-1].replace("_", " ").title()

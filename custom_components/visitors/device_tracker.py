@@ -70,7 +70,7 @@ class VisitorsVirtualTracker(TrackerEntity, RestoreEntity):
         self._zone_state_name = zone.split(".")[-1]
         self._attr_unique_id = f"{config_entry.entry_id}_manual_tracker"
 
-        # Reverted display name pattern back to standard Visitors naming scheme
+        # Explicitly apply requested custom naming scheme
         self._attr_name = f"Visitors at {zone_name}"
         self.entity_id = f"device_tracker.visitors_at_{zone_slug}"
         self._switch_entity_id = f"switch.visitors_at_{zone_slug}"
@@ -118,6 +118,9 @@ class VisitorsVirtualTracker(TrackerEntity, RestoreEntity):
                 self.hass, entities_to_track, async_state_changed_listener
             )
         )
+
+        # Force an immediate state refresh so tracking systems like Person catch changes instantly
+        self.async_schedule_update_ha_state(True)
 
     async def async_update(self) -> None:
         """Update tracker status based on companion switch or presence of guest trackers."""
