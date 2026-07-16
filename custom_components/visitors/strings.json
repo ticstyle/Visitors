@@ -22,22 +22,5 @@
         }
       }
     }
-  },
-  "entity": {
-    "sensor": {
-      "visitors_count": {
-        "name": "Visitors"
-      }
-    },
-    "switch": {
-      "manual_guest_toggle": {
-        "name": "Manual Guest Presence"
-      }
-    },
-    "device_tracker": {
-      "manual_guest_tracker": {
-        "name": "Manual Guest"
-      }
-    }
   }
 }
