@@ -70,8 +70,8 @@ class VisitorsVirtualTracker(TrackerEntity, RestoreEntity):
         self._zone_state_name = zone.split(".")[-1]
         self._attr_unique_id = f"{config_entry.entry_id}_manual_tracker"
 
-        # Updated display name pattern to reflect manual visitor naming scheme
-        self._attr_name = f"Manual visitor at {zone_name}"
+        # Reverted display name pattern back to standard Visitors naming scheme
+        self._attr_name = f"Visitors at {zone_name}"
         self.entity_id = f"device_tracker.visitors_at_{zone_slug}"
         self._switch_entity_id = f"switch.visitors_at_{zone_slug}"
         self._active = False
