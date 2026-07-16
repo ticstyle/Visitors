@@ -131,4 +131,3 @@ class VisitorsSensor(SensorEntity):
             count += 1
 
         self._state = count
-        
