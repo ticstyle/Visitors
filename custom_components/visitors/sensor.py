@@ -29,8 +29,12 @@ async def async_setup_entry(
         CONF_TRACKERS, config_entry.data.get(CONF_TRACKERS, [])
     )
 
+    if not isinstance(zone, str):
+        _LOGGER.error("Monitored zone is missing or invalid")
+        return
+
     # Fetch zone friendly name for custom explicit naming
-    zone_state = hass.states.get(zone) if zone else None
+    zone_state = hass.states.get(zone)
     zone_name = (
         zone_state.attributes.get("friendly_name")
         if zone_state and zone_state.attributes.get("friendly_name")
@@ -46,6 +50,7 @@ class VisitorsSensor(SensorEntity):
     """Representation of a Visitors Sensor."""
 
     _attr_has_entity_name = False
+    _attr_should_poll = False
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = "visitors"
     _attr_icon = "mdi:account-group"
@@ -69,7 +74,7 @@ class VisitorsSensor(SensorEntity):
         self.entity_id = f"sensor.visitors_at_{zone_slug}"
         self._switch_entity_id = f"switch.visitors_at_{zone_slug}"
 
-        self._zone_state_name = zone.split(".")[-1] if zone else "home"
+        self._zone_state_name = zone.split(".")[-1]
         self._state: int | None = None
 
     @property
@@ -126,3 +131,4 @@ class VisitorsSensor(SensorEntity):
             count += 1
 
         self._state = count
+        
