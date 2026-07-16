@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass, BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -34,9 +34,7 @@ async def async_setup_entry(
 
     zone_state = hass.states.get(zone)
     zone_name = zone.split(".")[-1].replace("_", " ").title()
-    if zone_state and isinstance(
-        friendly_name := zone_state.attributes.get("friendly_name"), str
-    ):
+    if zone_state and isinstance(friendly_name := zone_state.attributes.get("friendly_name"), str):
         zone_name = friendly_name
     zone_slug = slugify(zone_name)
 
@@ -54,7 +52,8 @@ class VisitorBinarySensor(BinarySensorEntity):
 
     _attr_has_entity_name = False
     _attr_should_poll = False
-    _attr_icon = "mdi:account-presence"
+    _attr_device_class = BinarySensorDeviceClass.PRESENCE
+    _attr_icon = "mdi:account"
 
     def __init__(
         self,
@@ -69,13 +68,13 @@ class VisitorBinarySensor(BinarySensorEntity):
         self._zone = zone
         self._zone_name = zone_name
         self._tracker_id = tracker_id
-
+        
         tracker_slug = tracker_id.split(".")[-1]
         self._attr_unique_id = f"{config_entry.entry_id}_binary_{tracker_slug}"
-
+        
         # Keep entity ID fully stable using the raw slugs so automations never break
         self.entity_id = f"binary_sensor.visitor_{zone_slug}_{tracker_slug}"
-
+        
         self._zone_state_name = zone.split(".")[-1]
         self._is_on = False
 
@@ -83,11 +82,9 @@ class VisitorBinarySensor(BinarySensorEntity):
     def name(self) -> str:
         """Dynamically fetch name from live state to capture upstream renames."""
         state = self.hass.states.get(self._tracker_id)
-        if state and isinstance(
-            friendly_name := state.attributes.get("friendly_name"), str
-        ):
+        if state and isinstance(friendly_name := state.attributes.get("friendly_name"), str):
             return f"{friendly_name} at {self._zone_name}"
-
+        
         fallback_name = self._tracker_id.split(".")[-1].replace("_", " ").title()
         return f"{fallback_name} at {self._zone_name}"
 
@@ -126,3 +123,4 @@ class VisitorBinarySensor(BinarySensorEntity):
         """Evaluate whether this targeted device is currently inside the zone boundaries."""
         state = self.hass.states.get(self._tracker_id)
         self._is_on = bool(state and state.state == self._zone_state_name)
+        
