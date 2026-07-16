@@ -1,12 +1,12 @@
 # Visitors
 
 <p align="left">
-  <img src="https://github.com/ticstyle/Visitors/blob/main/custom_components/visitors/brand/logo.png" alt="Visitors Logo" width="900">
+  <img src="https://github.com/ticstyle/Visitors/blob/main/custom_components/visitors/brand/logo.png" alt="Visitors Logo" width="800">
 </p>
 
   ![Release](https://img.shields.io/github/v/release/ticstyle/Visitors?style=for-the-badge&color=blue)
   ![HA Integration](https://img.shields.io/badge/Home%20Assistant-Custom%20Integration-blue?style=for-the-badge&logo=home-assistant)
-  [![Hassfest](https://img.shields.io/github/actions/workflow/status/ticstyle/Visitors/pipeline.yml?branch=main&job=hassfest&label=Hassfest&style=for-the-badge)](https://github.com/ticstyle/Visitors/actions/workflows/pipeline.yml)
+  [![Hassfest](https://img.shields.io/github/actions/workflow/status/ticstyle/Visitors/pipeline.yml?branch=main&job=hassfest&label=Hassfest&style=for-the-badge)]([https://github.com/ticstyle/Visitors/actions/workflows/pipeline.yml](https://github.com/ticstyle/Visitors/actions/workflows/pipeline.yml))
   [![HACS Validation](https://img.shields.io/github/actions/workflow/status/ticstyle/Visitors/pipeline.yml?branch=main&job=hacs&label=HACS&style=for-the-badge)](https://github.com/ticstyle/Visitors/actions/workflows/pipeline.yml)
   [![Ruff / Format](https://img.shields.io/github/actions/workflow/status/ticstyle/Visitors/pipeline.yml?branch=main&job=sync_and_format&label=Ruff%20%2F%20Format&style=for-the-badge)](https://github.com/ticstyle/Visitors/actions/workflows/pipeline.yml)
   [![Mypy](https://img.shields.io/github/actions/workflow/status/ticstyle/Visitors/pipeline.yml?branch=main&job=mypy&label=Mypy&style=for-the-badge)](https://github.com/ticstyle/Visitors/actions/workflows/pipeline.yml)
@@ -16,7 +16,7 @@
 
 An elegant, lightweight Home Assistant custom integration to track guest occupancy without messy templates, groups, or hardcoded automations. **Visitors** dynamically aggregates any selection of physical device trackers alongside a manual guest presence toggle to give you a single, reliable state metric representing the exact number of visitors currently inside a targeted zone.
 
-To add this integration, search for `Visitors` in HACS or add this repository custom URL: `https://github.com/ticstyle/Visitors`
+To add this integration, search for `Visitors` in HACS or add this repository custom URL: `[https://github.com/ticstyle/Visitors](https://github.com/ticstyle/Visitors)`
 
 ---
 
@@ -24,6 +24,7 @@ To add this integration, search for `Visitors` in HACS or add this repository cu
 
 * 📍 **Zone-Agnostic Aggregation:** Define which specific zone represents your target area (`zone.home` is set as default), allowing you to build dedicated trackers for vacation homes, work locations, or standard residences.
 * 👥 **Dynamic Tracker Binding:** Select any number of standard `device_tracker` entities to track. The parent sensor automatically monitors status shifts across all of them and counts how many are concurrently inside the selected zone boundaries.
+* 🛡️ **Dynamic Child Presence Sensors:** Automatically generates an individual binary sensor for every single selected device tracker. These entities listen live to upstream name updates, ensuring that if you rename a tracker, its display name updates instantly in the UI without breaking your entity IDs or automations.
 * 🔘 **Built-in Manual Guest Engine:** Need to track a visitor who doesn't have a device tracker integrated? The integration automatically spins up a dedicated manual companion switch and a virtual device tracker for each instance.
 * 🔀 **Composite Presence Logic:** The virtual guest device tracker intelligently turns `home` if the manual switch is flipped `on` **OR** if any of your monitored physical trackers arrive in the zone (even if the manual switch remains off).
 * 🧮 **Additive Counting Metrics:** The core sensor acts as a true mathematical sum, counting the manual switch as one visitor (when active) plus each chosen physical device tracker currently inside the zone (e.g. scales effortlessly from 0 to 19+ visitors).
@@ -75,13 +76,14 @@ Now, whenever the companion switch is toggled or an assigned device tracker ente
 
 ## 📊 Available Entities
 
-The integration creates a unified device named **Visitors at <Zone Name>** holding three cleanly mapped entities (examples below use `zone.home` yielding the slug `home`):
+The integration creates a unified device named **Visitors at <Zone Name>** holding cleanly mapped entities. Examples below use `zone.home` yielding the slug `home` and track a device named `stacey_phone`:
 
 | Entity ID | Name in UI | State Example | Description |
 | :--- | :--- | :--- | :--- |
 | `sensor.visitors_at_home` | Visitors at Home | `3` | Displays the total count of active guest device trackers in the zone + the manual switch status weight. |
 | `switch.visitors_at_home` | Manually set visitors at Home | `on` | A helper toggle switch to manually inject guest presence without a physical device tracker. |
 | `device_tracker.visitors_at_home` | Visitors at Home | `home` | A composite virtual device tracker driven by the manual switch state and active guest tracker arrivals. |
+| `binary_sensor.visitor_home_stacey_phone` | Stacey Phone at Home | `on` *(Connected)* | Individual status indicator for a specific guest device tracker within this zone. Tracks upstream names dynamically. |
 
 ### Entity Attributes
 The core sensor entity exposes structural tracking metadata under its state attributes:
@@ -92,53 +94,17 @@ The core sensor entity exposes structural tracking metadata under its state attr
 
 ## 💡 Lovelace Dashboard Examples
 
-### Example 1: Sleek Clean Header Card
-Display a welcoming greeting on your main dashboard showing the exact occupancy state of your home.
+### Example 1: High-Visibility Glance Grid
+An elegant visual status hub showing the collective counter alongside individual guest presence badges that light up when active.
 
 ```yaml
-type: markdown
-title: "House Status"
-content: >
-  ### 🏡 Welcome Home!
-  
-  Currently, there are **{{ states('sensor.visitors_at_home') }}** visitor(s) checked in at our residence.
-  
-  {% if is_state('switch.visitors_at_home', 'on') %}
-    📌 A manual guest has been checked in by a host toggle.
-  {% endif %}
-```
-
-### Example 2: Interactive Guest Management Hub
-An elegant control center to check manual visitors in and out of your home on the fly.
-
-```yaml
-type: entities
-title: "👥 Guest Management"
-show_header_toggle: false
+type: glance
+title: "👥 Guest Room Presence"
+state_color: true
 entities:
   - entity: sensor.visitors_at_home
-    name: "Active Guest Count"
-    icon: mdi:account-group
-  - type: section
-    label: "Manual Controls"
+    name: Total Visitors
+  - entity: binary_sensor.visitor_home_stacey_phone
+    name: Stacey
   - entity: switch.visitors_at_home
-    name: "Toggle Temporary Guest"
-    icon: mdi:account-plus
-  - entity: device_tracker.visitors_at_home
-    name: "Virtual Tracker State"
-```
-
-### Example 3: Conditional Lovelace Guest Banner
-Display a dynamic alert banner at the top of your dashboard that only triggers when visitors are detected at your home.
-
-```yaml
-type: conditional
-conditions:
-  - condition: numeric_state
-    entity: sensor.visitors_at_home
-    above: 0
-card:
-  type: markdown
-  content: >
-    🔔 **Visitor Mode Active:** Automations adjusted for guest occupancy (e.g., motion timeouts extended, night scenes delayed).
-```
+    name: Manual Toggle
