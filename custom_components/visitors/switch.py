@@ -12,7 +12,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
 
-from .const import DOMAIN
+from .const import CONF_ZONE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,23 +23,35 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Visitors switch platform."""
-    switch = VisitorsManualSwitch(config_entry)
+    zone = config_entry.options.get(CONF_ZONE, config_entry.data.get(CONF_ZONE))
+    
+    # Fetch zone friendly name for custom explicit naming
+    zone_state = hass.states.get(zone) if zone else None
+    zone_name = (
+        zone_state.attributes.get("friendly_name")
+        if zone_state and zone_state.attributes.get("friendly_name")
+        else zone.split(".")[-1].replace("_", " ").title()
+    )
+    zone_slug = slugify(zone_name)
+
+    switch = VisitorsManualSwitch(config_entry, zone_name, zone_slug)
     async_add_entities([switch])
 
 
 class VisitorsManualSwitch(SwitchEntity):
     """Representation of a manual visitor toggle switch."""
 
-    _attr_has_entity_name = True
-    _attr_translation_key = "manual_guest_toggle"
+    _attr_has_entity_name = False
     _attr_icon = "mdi:account-arrow-right"
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    def __init__(self, config_entry: ConfigEntry, zone_name: str, zone_slug: str) -> None:
         """Initialize the switch."""
         self._config_entry = config_entry
         self._attr_unique_id = f"{config_entry.entry_id}_manual_switch"
-        title_slug = slugify(config_entry.title)
-        self.entity_id = f"switch.visitors_manual_{title_slug}"
+        
+        # Explicitly apply requested custom naming scheme
+        self._attr_name = f"Manually set visitors at {zone_name}"
+        self.entity_id = f"switch.visitors_at_{zone_slug}"
         self._is_on = False
 
     @property
@@ -66,3 +78,4 @@ class VisitorsManualSwitch(SwitchEntity):
         """Turn the entity off."""
         self._is_on = False
         self.async_write_ha_state()
+        
