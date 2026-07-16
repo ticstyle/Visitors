@@ -4,12 +4,10 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.components.binary_sensor import (
-    BinarySensorDeviceClass,
-    BinarySensorEntity,
-)
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass, BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
@@ -35,11 +33,22 @@ async def async_setup_entry(
         _LOGGER.error("Monitored zone is missing or invalid")
         return
 
+    # Clean up orphaned binary sensor entities that were removed in the options flow
+    entity_reg = er.async_get(hass)
+    registered_entries = er.async_entries_for_config_entry(entity_reg, config_entry.entry_id)
+    current_unique_ids = {
+        f"{config_entry.entry_id}_binary_{tracker_id.split('.')[-1]}"
+        for tracker_id in trackers
+    }
+
+    for entry in registered_entries:
+        if entry.domain == "binary_sensor" and entry.unique_id.startswith(f"{config_entry.entry_id}_binary_"):
+            if entry.unique_id not in current_unique_ids:
+                entity_reg.async_remove(entry.entity_id)
+
     zone_state = hass.states.get(zone)
     zone_name = zone.split(".")[-1].replace("_", " ").title()
-    if zone_state and isinstance(
-        friendly_name := zone_state.attributes.get("friendly_name"), str
-    ):
+    if zone_state and isinstance(friendly_name := zone_state.attributes.get("friendly_name"), str):
         zone_name = friendly_name
     zone_slug = slugify(zone_name)
 
@@ -73,13 +82,13 @@ class VisitorBinarySensor(BinarySensorEntity):
         self._zone = zone
         self._zone_name = zone_name
         self._tracker_id = tracker_id
-
+        
         tracker_slug = tracker_id.split(".")[-1]
         self._attr_unique_id = f"{config_entry.entry_id}_binary_{tracker_slug}"
-
+        
         # Keep entity ID fully stable using the raw slugs so automations never break
         self.entity_id = f"binary_sensor.visitor_{zone_slug}_{tracker_slug}"
-
+        
         self._zone_state_name = zone.split(".")[-1]
         self._is_on = False
 
@@ -87,11 +96,9 @@ class VisitorBinarySensor(BinarySensorEntity):
     def name(self) -> str:
         """Dynamically fetch name from live state to capture upstream renames."""
         state = self.hass.states.get(self._tracker_id)
-        if state and isinstance(
-            friendly_name := state.attributes.get("friendly_name"), str
-        ):
+        if state and isinstance(friendly_name := state.attributes.get("friendly_name"), str):
             return f"{friendly_name} at {self._zone_name}"
-
+        
         fallback_name = self._tracker_id.split(".")[-1].replace("_", " ").title()
         return f"{fallback_name} at {self._zone_name}"
 
@@ -130,3 +137,4 @@ class VisitorBinarySensor(BinarySensorEntity):
         """Evaluate whether this targeted device is currently inside the zone boundaries."""
         state = self.hass.states.get(self._tracker_id)
         self._is_on = bool(state and state.state == self._zone_state_name)
+        
