@@ -29,7 +29,7 @@ async def async_setup_entry(
     trackers = config_entry.options.get(
         CONF_TRACKERS, config_entry.data.get(CONF_TRACKERS, [])
     )
-    
+
     if not isinstance(zone, str):
         _LOGGER.error("Monitored zone is missing or invalid")
         return
@@ -37,7 +37,9 @@ async def async_setup_entry(
     # Fetch zone friendly name for custom explicit naming
     zone_state = hass.states.get(zone)
     zone_name = zone.split(".")[-1].replace("_", " ").title()
-    if zone_state and isinstance(friendly_name := zone_state.attributes.get("friendly_name"), str):
+    if zone_state and isinstance(
+        friendly_name := zone_state.attributes.get("friendly_name"), str
+    ):
         zone_name = friendly_name
     zone_slug = slugify(zone_name)
 
@@ -65,7 +67,7 @@ class VisitorsVirtualTracker(TrackerEntity):
         self._trackers = trackers
         self._zone_state_name = zone.split(".")[-1]
         self._attr_unique_id = f"{config_entry.entry_id}_manual_tracker"
-        
+
         # Explicitly apply requested custom naming scheme
         self._attr_name = f"Visitors at {zone_name}"
         self.entity_id = f"device_tracker.visitors_at_{zone_slug}"
