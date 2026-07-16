@@ -63,12 +63,12 @@ class VisitorsSensor(SensorEntity):
         self._zone = zone
         self._trackers = trackers
         self._attr_unique_id = f"{config_entry.entry_id}_sensor"
-        
+
         # Explicitly apply requested custom naming scheme
         self._attr_name = f"Visitors at {zone_name}"
         self.entity_id = f"sensor.visitors_at_{zone_slug}"
         self._switch_entity_id = f"switch.visitors_at_{zone_slug}"
-        
+
         self._zone_state_name = zone.split(".")[-1] if zone else "home"
         self._state: int | None = None
 
@@ -119,11 +119,10 @@ class VisitorsSensor(SensorEntity):
             state = self.hass.states.get(tracker_id)
             if state and state.state == self._zone_state_name:
                 count += 1
-                
+
         # Append manual override weight if switch is active
         switch_state = self.hass.states.get(self._switch_entity_id)
         if switch_state and switch_state.state == "on":
             count += 1
-            
+
         self._state = count
-        
