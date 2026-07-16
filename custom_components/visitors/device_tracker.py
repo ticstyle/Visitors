@@ -37,9 +37,7 @@ async def async_setup_entry(
     # Fetch zone friendly name for custom explicit naming
     zone_state = hass.states.get(zone)
     zone_name = zone.split(".")[-1].replace("_", " ").title()
-    if zone_state and isinstance(
-        friendly_name := zone_state.attributes.get("friendly_name"), str
-    ):
+    if zone_state and isinstance(friendly_name := zone_state.attributes.get("friendly_name"), str):
         zone_name = friendly_name
     zone_slug = slugify(zone_name)
 
@@ -51,6 +49,7 @@ class VisitorsVirtualTracker(TrackerEntity):
     """Representation of a virtual guest device tracker."""
 
     _attr_has_entity_name = False
+    _attr_should_poll = False
     _attr_icon = "mdi:account"
 
     def __init__(
@@ -72,7 +71,7 @@ class VisitorsVirtualTracker(TrackerEntity):
         self._attr_name = f"Visitors at {zone_name}"
         self.entity_id = f"device_tracker.visitors_at_{zone_slug}"
         self._switch_entity_id = f"switch.visitors_at_{zone_slug}"
-        self._attr_location_name = "not_home"
+        self._active = False
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -88,6 +87,13 @@ class VisitorsVirtualTracker(TrackerEntity):
     def source_type(self) -> SourceType:
         """Return the source type of the device."""
         return SourceType.ROUTER
+
+    @property
+    def in_zones(self) -> list[str] | None:
+        """Return the zones the device is currently in to drive native person tracking."""
+        if self._active:
+            return [self._zone]
+        return []
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which is about to be added to hass."""
@@ -120,8 +126,6 @@ class VisitorsVirtualTracker(TrackerEntity):
                 tracker_in_zone = True
                 break
 
-        # Flip to zone state name (e.g. home) if switch is ON or any selected tracker is visiting
-        if switch_on or tracker_in_zone:
-            self._attr_location_name = self._zone_state_name
-        else:
-            self._attr_location_name = "not_home"
+        # Sync the internal presence state to trigger the native property calculation
+        self._active = bool(switch_on or tracker_in_zone)
+        
