@@ -16,10 +16,8 @@ from homeassistant.core import callback
 from homeassistant.helpers import selector
 
 from .const import (
-    CONF_CREATE_MANUAL,
     CONF_TRACKERS,
     CONF_ZONE,
-    DEFAULT_NAME,
     DEFAULT_ZONE,
     DOMAIN,
 )
@@ -37,12 +35,18 @@ class VisitorsConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            title = user_input.get("name", DEFAULT_NAME)
+            zone_id = user_input[CONF_ZONE]
+            zone_state = self.hass.states.get(zone_id)
+            zone_name = (
+                zone_state.attributes.get("friendly_name")
+                if zone_state and zone_state.attributes.get("friendly_name")
+                else zone_id.split(".")[-1].replace("_", " ").title()
+            )
+            title = f"Visitors at {zone_name}"
             return self.async_create_entry(title=title, data=user_input)
 
         data_schema = vol.Schema(
             {
-                vol.Required("name", default=DEFAULT_NAME): str,
                 vol.Required(CONF_ZONE, default=DEFAULT_ZONE): selector.EntitySelector(
                     selector.EntitySelectorConfig(domain="zone")
                 ),
@@ -51,9 +55,6 @@ class VisitorsConfigFlow(ConfigFlow, domain=DOMAIN):
                         domain="device_tracker", multiple=True
                     )
                 ),
-                vol.Required(
-                    CONF_CREATE_MANUAL, default=True
-                ): selector.BooleanSelector(),
             }
         )
 
@@ -90,10 +91,6 @@ class VisitorsOptionsFlowHandler(OptionsFlow):
         current_trackers = self._config_entry.options.get(
             CONF_TRACKERS, self._config_entry.data.get(CONF_TRACKERS, [])
         )
-        current_create_manual = self._config_entry.options.get(
-            CONF_CREATE_MANUAL,
-            self._config_entry.data.get(CONF_CREATE_MANUAL, True),
-        )
 
         options_schema = vol.Schema(
             {
@@ -107,9 +104,6 @@ class VisitorsOptionsFlowHandler(OptionsFlow):
                         domain="device_tracker", multiple=True
                     )
                 ),
-                vol.Required(
-                    CONF_CREATE_MANUAL, default=current_create_manual
-                ): selector.BooleanSelector(),
             }
         )
 

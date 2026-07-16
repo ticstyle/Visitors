@@ -5,10 +5,8 @@
         "title": "Configure Visitors Tracker",
         "description": "Set up a counter for your visiting guests based on selected device trackers.",
         "data": {
-          "name": "Name",
           "zone": "Zone to monitor",
-          "trackers": "Device trackers to track",
-          "create_manual": "Create a manual guest switch & tracker"
+          "trackers": "Device trackers to track"
         }
       }
     }
@@ -20,26 +18,8 @@
         "description": "Adjust the configuration for your Visitors sensor.",
         "data": {
           "zone": "Zone to monitor",
-          "trackers": "Device trackers to track",
-          "create_manual": "Create a manual guest switch & tracker"
+          "trackers": "Device trackers to track"
         }
-      }
-    }
-  },
-  "entity": {
-    "sensor": {
-      "visitors_count": {
-        "name": "Visitors"
-      }
-    },
-    "switch": {
-      "manual_guest_toggle": {
-        "name": "Manual Guest Presence"
-      }
-    },
-    "device_tracker": {
-      "manual_guest_tracker": {
-        "name": "Manual Guest"
       }
     }
   }
