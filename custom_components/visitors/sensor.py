@@ -29,22 +29,23 @@ async def async_setup_entry(
         CONF_TRACKERS, config_entry.data.get(CONF_TRACKERS, [])
     )
 
-    tracked_entities = list(trackers)
-    # Always append our companion manual guest tracker to our monitoring checklist
-    title_slug = slugify(config_entry.title)
-    manual_tracker_id = f"device_tracker.visitors_manual_{title_slug}"
-    if manual_tracker_id not in tracked_entities:
-        tracked_entities.append(manual_tracker_id)
+    # Fetch zone friendly name for custom explicit naming
+    zone_state = hass.states.get(zone) if zone else None
+    zone_name = (
+        zone_state.attributes.get("friendly_name")
+        if zone_state and zone_state.attributes.get("friendly_name")
+        else zone.split(".")[-1].replace("_", " ").title()
+    )
+    zone_slug = slugify(zone_name)
 
-    sensor = VisitorsSensor(config_entry, zone, tracked_entities)
+    sensor = VisitorsSensor(config_entry, zone, zone_name, zone_slug, trackers)
     async_add_entities([sensor], update_before_add=True)
 
 
 class VisitorsSensor(SensorEntity):
     """Representation of a Visitors Sensor."""
 
-    _attr_has_entity_name = True
-    _attr_translation_key = "visitors_count"
+    _attr_has_entity_name = False
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = "visitors"
     _attr_icon = "mdi:account-group"
@@ -53,6 +54,8 @@ class VisitorsSensor(SensorEntity):
         self,
         config_entry: ConfigEntry,
         zone: str,
+        zone_name: str,
+        zone_slug: str,
         trackers: list[str],
     ) -> None:
         """Initialize the sensor."""
@@ -60,7 +63,12 @@ class VisitorsSensor(SensorEntity):
         self._zone = zone
         self._trackers = trackers
         self._attr_unique_id = f"{config_entry.entry_id}_sensor"
-        # Extract location state name from zone entity ID (e.g., zone.home -> home)
+        
+        # Explicitly apply requested custom naming scheme
+        self._attr_name = f"Visitors at {zone_name}"
+        self.entity_id = f"sensor.visitors_at_{zone_slug}"
+        self._switch_entity_id = f"switch.visitors_at_{zone_slug}"
+        
         self._zone_state_name = zone.split(".")[-1] if zone else "home"
         self._state: int | None = None
 
@@ -93,16 +101,16 @@ class VisitorsSensor(SensorEntity):
 
         @callback
         def async_state_changed_listener(event: Event[EventStateChangedData]) -> None:
-            """Handle state changes of tracked entities."""
+            """Handle state changes of tracked entities and companion switch."""
             self.async_schedule_update_ha_state(True)
 
-        # Bind state listener to all tracked device entities
-        if self._trackers:
-            self.async_on_remove(
-                async_track_state_change_event(
-                    self.hass, self._trackers, async_state_changed_listener
-                )
+        # Track both the physical entities and our manual helper switch state
+        entities_to_track = list(self._trackers) + [self._switch_entity_id]
+        self.async_on_remove(
+            async_track_state_change_event(
+                self.hass, entities_to_track, async_state_changed_listener
             )
+        )
 
     async def async_update(self) -> None:
         """Update the visitor count state."""
@@ -111,4 +119,11 @@ class VisitorsSensor(SensorEntity):
             state = self.hass.states.get(tracker_id)
             if state and state.state == self._zone_state_name:
                 count += 1
+                
+        # Append manual override weight if switch is active
+        switch_state = self.hass.states.get(self._switch_entity_id)
+        if switch_state and switch_state.state == "on":
+            count += 1
+            
         self._state = count
+        
