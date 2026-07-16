@@ -29,7 +29,7 @@ async def async_setup_entry(
     trackers = config_entry.options.get(
         CONF_TRACKERS, config_entry.data.get(CONF_TRACKERS, [])
     )
-    
+
     # Fetch zone friendly name for custom explicit naming
     zone_state = hass.states.get(zone) if zone else None
     zone_name = (
@@ -63,7 +63,7 @@ class VisitorsVirtualTracker(TrackerEntity):
         self._trackers = trackers
         self._zone_state_name = zone.split(".")[-1] if zone else "home"
         self._attr_unique_id = f"{config_entry.entry_id}_manual_tracker"
-        
+
         # Explicitly apply requested custom naming scheme
         self._attr_name = f"Visitors at {zone_name}"
         self.entity_id = f"device_tracker.visitors_at_{zone_slug}"
@@ -121,4 +121,3 @@ class VisitorsVirtualTracker(TrackerEntity):
             self._attr_location_name = self._zone_state_name
         else:
             self._attr_location_name = "not_home"
-            
