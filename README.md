@@ -1,7 +1,7 @@
 # Visitors
 
 <p align="left">
-  <img src="https://github.com/ticstyle/Visitors/blob/main/custom_components/visitors/brand/logo.png" alt="Visitors Logo" width="800">
+  <img src="https://github.com/ticstyle/Visitors/blob/main/custom_components/visitors/brand/logo.png" alt="Visitors Logo" width="900">
 </p>
 
   ![Release](https://img.shields.io/github/v/release/ticstyle/Visitors?style=for-the-badge&color=blue)
@@ -14,7 +14,7 @@
   ![Installs](https://img.shields.io/badge/dynamic/json?style=for-the-badge&color=41BDF5&logo=home-assistant&label=installs&url=https%3A%2F%2Fanalytics.home-assistant.io%2Fcustom_integrations.json&query=%24.Visitors.total)
   ![Issues](https://img.shields.io/github/issues/ticstyle/Visitors?style=for-the-badge&color=orange)
 
-An elegant, lightweight Home Assistant custom integration to track guest occupancy without messy templates, groups, or hardcoded automations. **Visitors** dynamically aggregates any selection of physical device trackers alongside a virtual guest presence helper to give you a single, reliable state metric representing the exact number of visitors currently inside a targeted zone.
+An elegant, lightweight Home Assistant custom integration to track guest occupancy without messy templates, groups, or hardcoded automations. **Visitors** dynamically aggregates any selection of physical device trackers alongside a manual guest presence toggle to give you a single, reliable state metric representing the exact number of visitors currently inside a targeted zone.
 
 To add this integration, search for `Visitors` in HACS or add this repository custom URL: `https://github.com/ticstyle/Visitors`
 
@@ -24,9 +24,10 @@ To add this integration, search for `Visitors` in HACS or add this repository cu
 
 * 📍 **Zone-Agnostic Aggregation:** Define which specific zone represents your target area (`zone.home` is set as default), allowing you to build dedicated trackers for vacation homes, work locations, or standard residences.
 * 👥 **Dynamic Tracker Binding:** Select any number of standard `device_tracker` entities to track. The parent sensor automatically monitors status shifts across all of them and counts how many are concurrently inside the selected zone boundaries.
-* 🔘 **Manual Guest Toggle Engine:** Need to track a visitor who doesn't have a device tracker integrated? The integration can dynamically spin up a companion virtual guest presence switch (`switch.visitors_manual_...`) and linked virtual tracker (`device_tracker.visitors_manual_...`) inside Home Assistant on demand. Flipping the switch automatically checks a virtual guest in or out of the target zone.
-* ⚡ **Event-Driven & Polling-Free:** Built entirely with asynchronous event hooks. The integration does not run continuous CPU-heavy polling intervals; it updates immediately when Home Assistant reports state changes for any of your selected trackers.
-* 🛠️ **Seamless Options Flow:** Reconfigure your zone targets, change which trackers are being aggregated, or toggle the virtual manual guest components on the fly directly through the Home Assistant integrations configuration card.
+* 🔘 **Built-in Manual Guest Engine:** Need to track a visitor who doesn't have a device tracker integrated? The integration automatically spins up a dedicated manual companion switch and a virtual device tracker for each instance.
+* 🔀 **Composite Presence Logic:** The virtual guest device tracker intelligently turns `home` if the manual switch is flipped `on` **OR** if any of your monitored physical trackers arrive in the zone (even if the manual switch remains off).
+* 🧮 **Additive Counting Metrics:** The core sensor acts as a true mathematical sum, counting the manual switch as one visitor (when active) plus each chosen physical device tracker currently inside the zone (e.g. scales effortlessly from 0 to 19+ visitors).
+* ⚡ **Event-Driven & Polling-Free:** Built entirely with asynchronous event hooks. The integration does not run continuous CPU-heavy polling intervals; it updates immediately when Home Assistant reports state changes.
 
 ---
 
@@ -51,27 +52,41 @@ You can search for the **Visitors** integration directly within HACS or launch i
 1. Navigate to **Settings -> Devices & Services -> Add Integration** in your Home Assistant UI.
 2. Search for **Visitors** and click setup.
 3. Complete the setup form by configuring your tracker targets:
-   * **Name**: The display name for your integration device container (defaults to `Visitors`).
-   * **Zone**: The target `zone.*` to monitor.
-   * **Device Trackers**: A multi-select checklist of your physical device trackers.
-   * **Manual Guest Switch**: Toggle whether you want the integration to create a local virtual device tracker and toggle switch.
+   * **Zone to monitor**: The target `zone.*` to monitor (e.g., `zone.home`). 
+   * **Device trackers to track**: A multi-select checklist of your physical guest device trackers.
+4. The integration automatically resolves the zone name and names the instance `"Visitors at <Zone Name>"` with clean, readable entity handles.
+
+---
+
+## 🔝 Native Zone Occupancy Setup (Highly Recommended)
+
+Home Assistant's native zone state counter (e.g., `zone.home`) is strictly hardcoded to **only count system-registered `person` entities**. It completely ignores raw sensors or standalone device trackers.
+
+To make this integration automatically scale your home's official zone occupancy count whenever a guest arrives or the switch is toggled, execute this quick **30-second, one-time manual setup**:
+
+1. Go to **Settings -> People** in your Home Assistant UI and click **Add Person**.
+2. Name the person something clean like **Guests** or **Visitors**.
+3. In the **"Track device"** dropdown, search for and select the virtual tracker generated by this integration: `device_tracker.visitors_at_<choosen_zone_name>`.
+4. Click **Save**.
+
+Now, whenever the companion switch is toggled or an assigned device tracker enters the zone, the virtual tracker handles the person state behind the scenes, instantly incrementing your native `zone.home` occupant counter!
 
 ---
 
 ## 📊 Available Entities
 
-The integration creates a unified device named **Visitors** holding up to three entities (depending on whether your manual guest switch was activated during configuration):
+The integration creates a unified device named **Visitors at <Zone Name>** holding three cleanly mapped entities (examples below use `zone.home` yielding the slug `home`):
 
 | Entity ID | Name in UI | State Example | Description |
 | :--- | :--- | :--- | :--- |
-| `sensor.visitors_<entry_id>_sensor` | Visitors | `3` | Displays the current number of active tracked guests located within the target zone. |
-| `switch.visitors_manual_<entry_id>` | Manual Guest Presence | `on` *(På)* | A virtual toggle switch. When turned `on`, it checks the manual guest tracker into the target zone. |
-| `device_tracker.visitors_manual_<entry_id>` | Manual Guest | `home` | A virtual device tracker that mimics the state of the companion toggle switch. |
+| `sensor.visitors_at_home` | Visitors at Home | `3` | Displays the total count of active guest device trackers in the zone + the manual switch status weight. |
+| `switch.visitors_at_home` | Manually set visitors at Home | `on` | A helper toggle switch to manually inject guest presence without a physical device tracker. |
+| `device_tracker.visitors_at_home` | Visitors at Home | `home` | A composite virtual device tracker driven by the manual switch state and active guest tracker arrivals. |
 
 ### Entity Attributes
 The core sensor entity exposes structural tracking metadata under its state attributes:
 * `monitored_zone`: The configured target zone entity ID (e.g., `zone.home`).
-* `tracked_entities`: A list of all targeted device trackers currently being monitored.
+* `tracked_entities`: A list of all targeted physical device trackers currently being monitored.
 
 ---
 
@@ -86,9 +101,9 @@ title: "House Status"
 content: >
   ### 🏡 Welcome Home!
   
-  Currently, there are **{{ states('sensor.visitors') }}** visitor(s) checked in at our residence.
+  Currently, there are **{{ states('sensor.visitors_at_home') }}** visitor(s) checked in at our residence.
   
-  {% if is_state('switch.visitors_manual_presence', 'on') %}
+  {% if is_state('switch.visitors_at_home', 'on') %}
     📌 A manual guest has been checked in by a host toggle.
   {% endif %}
 ```
@@ -101,15 +116,15 @@ type: entities
 title: "👥 Guest Management"
 show_header_toggle: false
 entities:
-  - entity: sensor.visitors
+  - entity: sensor.visitors_at_home
     name: "Active Guest Count"
     icon: mdi:account-group
   - type: section
     label: "Manual Controls"
-  - entity: switch.visitors_manual_presence
+  - entity: switch.visitors_at_home
     name: "Toggle Temporary Guest"
     icon: mdi:account-plus
-  - entity: device_tracker.visitors_manual
+  - entity: device_tracker.visitors_at_home
     name: "Virtual Tracker State"
 ```
 
@@ -120,7 +135,7 @@ Display a dynamic alert banner at the top of your dashboard that only triggers w
 type: conditional
 conditions:
   - condition: numeric_state
-    entity: sensor.visitors
+    entity: sensor.visitors_at_home
     above: 0
 card:
   type: markdown
