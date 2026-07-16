@@ -38,9 +38,7 @@ async def async_setup_entry(
     # Fetch zone friendly name for custom explicit naming
     zone_state = hass.states.get(zone)
     zone_name = zone.split(".")[-1].replace("_", " ").title()
-    if zone_state and isinstance(
-        friendly_name := zone_state.attributes.get("friendly_name"), str
-    ):
+    if zone_state and isinstance(friendly_name := zone_state.attributes.get("friendly_name"), str):
         zone_name = friendly_name
     zone_slug = slugify(zone_name)
 
@@ -70,7 +68,7 @@ class VisitorsVirtualTracker(TrackerEntity, RestoreEntity):
         self._zone_state_name = zone.split(".")[-1]
         self._attr_unique_id = f"{config_entry.entry_id}_manual_tracker"
 
-        # Reverted display name pattern back to standard Visitors naming scheme
+        # Explicitly apply requested custom naming scheme
         self._attr_name = f"Visitors at {zone_name}"
         self.entity_id = f"device_tracker.visitors_at_{zone_slug}"
         self._switch_entity_id = f"switch.visitors_at_{zone_slug}"
@@ -119,6 +117,9 @@ class VisitorsVirtualTracker(TrackerEntity, RestoreEntity):
             )
         )
 
+        # Force an immediate state refresh so tracking systems like Person catch changes instantly
+        self.async_schedule_update_ha_state(True)
+
     async def async_update(self) -> None:
         """Update tracker status based on companion switch or presence of guest trackers."""
         switch_on = False
@@ -135,3 +136,4 @@ class VisitorsVirtualTracker(TrackerEntity, RestoreEntity):
 
         # Sync the internal presence state to trigger the native property calculation
         self._active = bool(switch_on or tracker_in_zone)
+        
