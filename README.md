@@ -82,7 +82,7 @@ The integration creates a unified device named **Visitors at <Zone Name>** holdi
 | :--- | :--- | :--- | :--- |
 | `sensor.visitors_at_home` | Visitors at Home | `3` | Displays the total count of active guest device trackers in the zone + the manual switch status weight. |
 | `switch.visitors_at_home` | Manually set visitors at Home | `on` | A helper toggle switch to manually inject guest presence without a physical device tracker. |
-| `device_tracker.visitors_at_home` | Manual visitor at Home | `home` | A composite virtual device tracker driven by the manual switch state and active guest tracker arrivals. |
+| `device_tracker.visitors_at_home` | Visitors at Home | `home` | A composite virtual device tracker driven by the manual switch state and active guest tracker arrivals. |
 | `binary_sensor.visitor_home_stacey_phone` | Stacey Phone at Home | `on` *(Home)* | Individual status indicator for a specific guest device tracker within this zone. Native presence class maps translation to Home/Away. |
 
 ### Entity Attributes
