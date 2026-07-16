@@ -6,7 +6,7 @@
 
   ![Release](https://img.shields.io/github/v/release/ticstyle/Visitors?style=for-the-badge&color=blue)
   ![HA Integration](https://img.shields.io/badge/Home%20Assistant-Custom%20Integration-blue?style=for-the-badge&logo=home-assistant)
-  [![Hassfest](https://img.shields.io/github/actions/workflow/status/ticstyle/Visitors/pipeline.yml?branch=main&job=hassfest&label=Hassfest&style=for-the-badge)]([https://github.com/ticstyle/Visitors/actions/workflows/pipeline.yml](https://github.com/ticstyle/Visitors/actions/workflows/pipeline.yml))
+  [![Hassfest](https://img.shields.io/github/actions/workflow/status/ticstyle/Visitors/pipeline.yml?branch=main&job=hassfest&label=Hassfest&style=for-the-badge)](https://github.com/ticstyle/Visitors/actions/workflows/pipeline.yml)
   [![HACS Validation](https://img.shields.io/github/actions/workflow/status/ticstyle/Visitors/pipeline.yml?branch=main&job=hacs&label=HACS&style=for-the-badge)](https://github.com/ticstyle/Visitors/actions/workflows/pipeline.yml)
   [![Ruff / Format](https://img.shields.io/github/actions/workflow/status/ticstyle/Visitors/pipeline.yml?branch=main&job=sync_and_format&label=Ruff%20%2F%20Format&style=for-the-badge)](https://github.com/ticstyle/Visitors/actions/workflows/pipeline.yml)
   [![Mypy](https://img.shields.io/github/actions/workflow/status/ticstyle/Visitors/pipeline.yml?branch=main&job=mypy&label=Mypy&style=for-the-badge)](https://github.com/ticstyle/Visitors/actions/workflows/pipeline.yml)
@@ -16,7 +16,7 @@
 
 An elegant, lightweight Home Assistant custom integration to track guest occupancy without messy templates, groups, or hardcoded automations. **Visitors** dynamically aggregates any selection of physical device trackers alongside a manual guest presence toggle to give you a single, reliable state metric representing the exact number of visitors currently inside a targeted zone.
 
-To add this integration, search for `Visitors` in HACS or add this repository custom URL: `[https://github.com/ticstyle/Visitors](https://github.com/ticstyle/Visitors)`
+To add this integration, search for `Visitors` in HACS or add this repository custom URL: `https://github.com/ticstyle/Visitors`
 
 ---
 
@@ -108,3 +108,37 @@ entities:
     name: Stacey
   - entity: switch.visitors_at_home
     name: Manual Toggle
+```
+
+### Example 2: Minimalist Management Card
+Display a welcoming greeting on your main dashboard showing the exact occupancy state of your home with conditional warnings.
+
+```yaml
+type: entities
+title: "🏡 Occupancy Management"
+show_header_toggle: false
+entities:
+  - entity: sensor.visitors_at_home
+    name: "Active Guest Count"
+    icon: mdi:account-group
+  - type: section
+    label: "Manual Override"
+  - entity: switch.visitors_at_home
+    name: "Check In Temporary Guest"
+    icon: mdi:account-plus
+```
+
+### Example 3: Conditional Lovelace Guest Banner
+Display a dynamic alert banner at the top of your dashboard that only triggers when visitors are detected at your home.
+
+```yaml
+type: conditional
+conditions:
+  - condition: numeric_state
+    entity: sensor.visitors_at_home
+    above: 0
+card:
+  type: markdown
+  content: >
+    🔔 **Visitor Mode Active:** Automations adjusted for guest occupancy (e.g., motion timeouts extended, night scenes delayed).
+```
