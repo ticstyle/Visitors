@@ -24,14 +24,16 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Visitors switch platform."""
     zone = config_entry.options.get(CONF_ZONE, config_entry.data.get(CONF_ZONE))
+    
+    if not isinstance(zone, str):
+        _LOGGER.error("Monitored zone is missing or invalid")
+        return
 
     # Fetch zone friendly name for custom explicit naming
-    zone_state = hass.states.get(zone) if zone else None
-    zone_name = (
-        zone_state.attributes.get("friendly_name")
-        if zone_state and zone_state.attributes.get("friendly_name")
-        else zone.split(".")[-1].replace("_", " ").title()
-    )
+    zone_state = hass.states.get(zone)
+    zone_name = zone.split(".")[-1].replace("_", " ").title()
+    if zone_state and isinstance(friendly_name := zone_state.attributes.get("friendly_name"), str):
+        zone_name = friendly_name
     zone_slug = slugify(zone_name)
 
     switch = VisitorsManualSwitch(config_entry, zone_name, zone_slug)
@@ -44,13 +46,11 @@ class VisitorsManualSwitch(SwitchEntity):
     _attr_has_entity_name = False
     _attr_icon = "mdi:account-arrow-right"
 
-    def __init__(
-        self, config_entry: ConfigEntry, zone_name: str, zone_slug: str
-    ) -> None:
+    def __init__(self, config_entry: ConfigEntry, zone_name: str, zone_slug: str) -> None:
         """Initialize the switch."""
         self._config_entry = config_entry
         self._attr_unique_id = f"{config_entry.entry_id}_manual_switch"
-
+        
         # Explicitly apply requested custom naming scheme
         self._attr_name = f"Manually set visitors at {zone_name}"
         self.entity_id = f"switch.visitors_at_{zone_slug}"
@@ -80,3 +80,4 @@ class VisitorsManualSwitch(SwitchEntity):
         """Turn the entity off."""
         self._is_on = False
         self.async_write_ha_state()
+        
