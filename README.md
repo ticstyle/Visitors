@@ -4,19 +4,22 @@
   <img src="https://github.com/ticstyle/Visitors/blob/main/custom_components/visitors/brand/logo.png" alt="Visitors Logo" width="800">
 </p>
 
-  ![Release](https://img.shields.io/github/v/release/ticstyle/Visitors?style=for-the-badge&color=blue)
-  ![HA Integration](https://img.shields.io/badge/Home%20Assistant-Custom%20Integration-blue?style=for-the-badge&logo=home-assistant)
-  [![Hassfest](https://img.shields.io/github/actions/workflow/status/ticstyle/Visitors/pipeline.yml?branch=main&job=hassfest&label=Hassfest&style=for-the-badge)](https://github.com/ticstyle/Visitors/actions/workflows/pipeline.yml)
-  [![HACS Validation](https://img.shields.io/github/actions/workflow/status/ticstyle/Visitors/pipeline.yml?branch=main&job=hacs&label=HACS&style=for-the-badge)](https://github.com/ticstyle/Visitors/actions/workflows/pipeline.yml)
-  [![Ruff / Format](https://img.shields.io/github/actions/workflow/status/ticstyle/Visitors/pipeline.yml?branch=main&job=sync_and_format&label=Ruff%20%2F%20Format&style=for-the-badge)](https://github.com/ticstyle/Visitors/actions/workflows/pipeline.yml)
-  [![Mypy](https://img.shields.io/github/actions/workflow/status/ticstyle/Visitors/pipeline.yml?branch=main&job=mypy&label=Mypy&style=for-the-badge)](https://github.com/ticstyle/Visitors/actions/workflows/pipeline.yml)
-  ![License](https://img.shields.io/github/license/ticstyle/Visitors?style=for-the-badge)
-  ![Installs](https://img.shields.io/badge/dynamic/json?style=for-the-badge&color=41BDF5&logo=home-assistant&label=installs&url=https%3A%2F%2Fanalytics.home-assistant.io%2Fcustom_integrations.json&query=%24.Visitors.total)
-  ![Issues](https://img.shields.io/github/issues/ticstyle/Visitors?style=for-the-badge&color=orange)
+![Latest Release](https://img.shields.io/github/v/release/ticstyle/Visitors?color=blue&label=Release)
+![Last Updated](https://img.shields.io/github/last-commit/ticstyle/Visitors?path=hacs.json&label=Maintained)
+![Issues](https://img.shields.io/github/issues/ticstyle/Visitors?color=orange&label=Issues)
+![Custom Integration](https://img.shields.io/badge/Home%20Assistant-Custom%20Integration-blue?logo=home-assistant)
+![Home Assistant Required Version](https://img.shields.io/badge/dynamic/json?url=https://raw.githubusercontent.com/ticstyle/Visitors/main/hacs.json&query=%24.homeassistant&suffix=%2B&label=Home%20Assistant&logo=homeassistant)
+
+![License](https://img.shields.io/github/license/ticstyle/Visitors?label=License)
+[![Hassfest](https://img.shields.io/github/actions/workflow/status/ticstyle/Visitors/pipeline.yml?branch=main&job=hassfest&label=Hassfest)](https://github.com/ticstyle/Visitors/actions/workflows/pipeline.yml)
+[![HACS Validation](https://img.shields.io/github/actions/workflow/status/ticstyle/Visitors/pipeline.yml?branch=main&job=hacs&label=HACS)](https://github.com/ticstyle/Visitors/actions/workflows/pipeline.yml)
+[![Ruff / Format](https://img.shields.io/github/actions/workflow/status/ticstyle/Visitors/pipeline.yml?branch=main&job=sync_and_format&label=Ruff%20%2F%20Format)](https://github.com/ticstyle/Visitors/actions/workflows/pipeline.yml)
+[![Mypy](https://img.shields.io/github/actions/workflow/status/ticstyle/Visitors/pipeline.yml?branch=main&job=mypy&label=Mypy)](https://github.com/ticstyle/Visitors/actions/workflows/pipeline.yml)
+![Installs](https://img.shields.io/badge/dynamic/json?color=41BDF5&logo=home-assistant&label=Known%20installs&url=https%3A%2F%2Fanalytics.home-assistant.io%2Fcustom_integrations.json&query=%24.Visitors.total)
 
 An elegant, lightweight Home Assistant custom integration to track guest occupancy without messy templates, groups, or hardcoded automations. **Visitors** dynamically aggregates any selection of physical device trackers alongside a manual guest presence toggle to give you a single, reliable state metric representing the exact number of visitors currently inside a targeted zone.
 
-To add this integration, search for `Visitors` in HACS or add this repository custom URL: `https://github.com/ticstyle/Visitors`
+To add this integration, add this repository custom URL: `https://github.com/ticstyle/Visitors` in HACS and then search for `Visitors` in HACS.
 
 ---
 
