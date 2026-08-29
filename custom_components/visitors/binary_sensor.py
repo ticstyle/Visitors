@@ -10,6 +10,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import STATE_HOME
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -37,7 +38,7 @@ async def async_setup_entry(
         _LOGGER.error("Monitored zone is missing or invalid")
         return
 
-    # Clean up orphaned binary sensor entities that were removed in the options flow
+    # Clean up orphaned binary sensor entities removed in options flow
     entity_reg = er.async_get(hass)
     registered_entries = er.async_entries_for_config_entry(
         entity_reg, config_entry.entry_id
@@ -63,7 +64,7 @@ async def async_setup_entry(
         zone_name = friendly_name
     zone_slug = slugify(zone_name)
 
-    # Instantiate a binary presence entity for every monitored physical tracker
+    # Instantiate binary presence entity for every monitored physical tracker
     binary_sensors = [
         VisitorBinarySensor(config_entry, zone, zone_name, zone_slug, tracker_id)
         for tracker_id in trackers
@@ -97,10 +98,14 @@ class VisitorBinarySensor(BinarySensorEntity):
         tracker_slug = tracker_id.split(".")[-1]
         self._attr_unique_id = f"{config_entry.entry_id}_binary_{tracker_slug}"
 
-        # Keep entity ID fully stable using the raw slugs so automations never break
+        # Keep entity ID fully stable using raw slugs
         self.entity_id = f"binary_sensor.visitor_{zone_slug}_{tracker_slug}"
 
-        self._zone_state_name = zone.split(".")[-1]
+        if zone == "zone.home" or zone.endswith(".home"):
+            self._zone_state_name = STATE_HOME
+        else:
+            self._zone_state_name = zone_name
+
         self._is_on = False
 
     @property
@@ -136,10 +141,10 @@ class VisitorBinarySensor(BinarySensorEntity):
 
         @callback
         def async_tracker_state_listener(event: Event[EventStateChangedData]) -> None:
-            """Instantly update state when the specific target tracker shifts."""
+            """Instantly update state when specific target tracker shifts."""
             self.async_schedule_update_ha_state(True)
 
-        # Track only our specific targeted device tracker
+        # Track targeted device tracker
         self.async_on_remove(
             async_track_state_change_event(
                 self.hass, [self._tracker_id], async_tracker_state_listener
