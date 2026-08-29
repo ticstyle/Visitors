@@ -116,9 +116,8 @@ class VisitorsVirtualTracker(TrackerEntity, RestoreEntity):
 
         # Restore the last known location name from the state machine cache
         if (
-            (old_state := await self.async_get_last_state()) is not None
-            and old_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
-        ):
+            old_state := await self.async_get_last_state()
+        ) is not None and old_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
             self._attr_location_name = old_state.state
 
         @callback
