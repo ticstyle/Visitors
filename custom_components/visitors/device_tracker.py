@@ -78,13 +78,17 @@ class VisitorsVirtualTracker(TrackerEntity, RestoreEntity):
         self._zone_name = zone_name
         self._zone_slug = zone_slug
         self._trackers = trackers
-        self._zone_state_name = zone.split(".")[-1]
         self._attr_unique_id = f"{config_entry.entry_id}_manual_tracker"
 
         # Explicitly apply requested custom naming scheme
         self._attr_name = f"Visitors at {zone_name}"
         self.entity_id = f"device_tracker.visitors_at_{zone_slug}"
         self._attr_location_name = STATE_NOT_HOME
+
+        if zone == "zone.home" or zone.endswith(".home"):
+            self._zone_state_name = STATE_HOME
+        else:
+            self._zone_state_name = zone_name
 
     def _get_switch_entity_id(self) -> str:
         """Fetch the live companion switch entity ID from the entity registry."""
@@ -114,10 +118,11 @@ class VisitorsVirtualTracker(TrackerEntity, RestoreEntity):
         """Handle entity which is about to be added to hass."""
         await super().async_added_to_hass()
 
-        # Restore the last known location name from the state machine cache
+        # Restore last known location name from state machine cache
         if (
-            old_state := await self.async_get_last_state()
-        ) is not None and old_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
+            (old_state := await self.async_get_last_state()) is not None
+            and old_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
+        ):
             self._attr_location_name = old_state.state
 
         @callback
@@ -125,7 +130,7 @@ class VisitorsVirtualTracker(TrackerEntity, RestoreEntity):
             """Handle changes from manual switch or monitored device trackers."""
             self.async_schedule_update_ha_state(True)
 
-        # Monitor both the manual toggle switch and physical device trackers list
+        # Monitor both manual toggle switch and physical device trackers
         entities_to_track = list(self._trackers) + [self._get_switch_entity_id()]
         self.async_on_remove(
             async_track_state_change_event(
@@ -133,7 +138,6 @@ class VisitorsVirtualTracker(TrackerEntity, RestoreEntity):
             )
         )
 
-        # Force an immediate state refresh so tracking systems catch changes instantly
         self.async_schedule_update_ha_state(True)
 
     async def async_update(self) -> None:
@@ -152,7 +156,7 @@ class VisitorsVirtualTracker(TrackerEntity, RestoreEntity):
 
         # Set location name according to target zone rules
         if switch_on or tracker_in_zone:
-            if self._zone == "zone.home" or self._zone_state_name == "home":
+            if self._zone == "zone.home" or self._zone.endswith(".home"):
                 self._attr_location_name = STATE_HOME
             else:
                 self._attr_location_name = self._zone_name
