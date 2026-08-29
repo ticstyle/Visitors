@@ -1,3 +1,4 @@
+# custom_components/visitors/device_tracker.py
 """Device tracker platform for Visitors."""
 
 from __future__ import annotations
@@ -5,8 +6,16 @@ from __future__ import annotations
 import logging
 
 from homeassistant.components.device_tracker import SourceType, TrackerEntity
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    STATE_HOME,
+    STATE_NOT_HOME,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
@@ -66,15 +75,29 @@ class VisitorsVirtualTracker(TrackerEntity, RestoreEntity):
         """Initialize the device tracker."""
         self._config_entry = config_entry
         self._zone = zone
+        self._zone_name = zone_name
+        self._zone_slug = zone_slug
         self._trackers = trackers
-        self._zone_state_name = zone.split(".")[-1]
         self._attr_unique_id = f"{config_entry.entry_id}_manual_tracker"
 
         # Explicitly apply requested custom naming scheme
         self._attr_name = f"Visitors at {zone_name}"
         self.entity_id = f"device_tracker.visitors_at_{zone_slug}"
-        self._switch_entity_id = f"switch.visitors_at_{zone_slug}"
-        self._active = False
+        self._attr_location_name = STATE_NOT_HOME
+
+        if zone == "zone.home" or zone.endswith(".home"):
+            self._zone_state_name = STATE_HOME
+        else:
+            self._zone_state_name = zone_name
+
+    def _get_switch_entity_id(self) -> str:
+        """Fetch the live companion switch entity ID from the entity registry."""
+        entity_reg = er.async_get(self.hass)
+        if switch_id := entity_reg.async_get_entity_id(
+            SWITCH_DOMAIN, DOMAIN, f"{self._config_entry.entry_id}_manual_switch"
+        ):
+            return switch_id
+        return f"switch.visitors_at_{self._zone_slug}"
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -91,41 +114,35 @@ class VisitorsVirtualTracker(TrackerEntity, RestoreEntity):
         """Return the source type of the device."""
         return SourceType.ROUTER
 
-    @property
-    def in_zones(self) -> list[str] | None:
-        """Return the zones the device is currently in to drive native person tracking."""
-        if self._active:
-            return [self._zone]
-        return []
-
     async def async_added_to_hass(self) -> None:
         """Handle entity which is about to be added to hass."""
         await super().async_added_to_hass()
 
-        # Restore the last known presence status from the state machine cache
-        if (old_state := await self.async_get_last_state()) is not None:
-            self._active = old_state.state == self._zone_state_name
+        # Restore last known location name from state machine cache
+        if (
+            old_state := await self.async_get_last_state()
+        ) is not None and old_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
+            self._attr_location_name = old_state.state
 
         @callback
         def async_state_changed_listener(event: Event[EventStateChangedData]) -> None:
             """Handle changes from manual switch or monitored device trackers."""
             self.async_schedule_update_ha_state(True)
 
-        # Monitor both the manual toggle switch and our physical device trackers list
-        entities_to_track = list(self._trackers) + [self._switch_entity_id]
+        # Monitor both manual toggle switch and physical device trackers
+        entities_to_track = list(self._trackers) + [self._get_switch_entity_id()]
         self.async_on_remove(
             async_track_state_change_event(
                 self.hass, entities_to_track, async_state_changed_listener
             )
         )
 
-        # Force an immediate state refresh so tracking systems like Person catch changes instantly
         self.async_schedule_update_ha_state(True)
 
     async def async_update(self) -> None:
         """Update tracker status based on companion switch or presence of guest trackers."""
         switch_on = False
-        switch_state = self.hass.states.get(self._switch_entity_id)
+        switch_state = self.hass.states.get(self._get_switch_entity_id())
         if switch_state and switch_state.state == "on":
             switch_on = True
 
@@ -136,5 +153,11 @@ class VisitorsVirtualTracker(TrackerEntity, RestoreEntity):
                 tracker_in_zone = True
                 break
 
-        # Sync the internal presence state to trigger the native property calculation
-        self._active = bool(switch_on or tracker_in_zone)
+        # Set location name according to target zone rules
+        if switch_on or tracker_in_zone:
+            if self._zone == "zone.home" or self._zone.endswith(".home"):
+                self._attr_location_name = STATE_HOME
+            else:
+                self._attr_location_name = self._zone_name
+        else:
+            self._attr_location_name = STATE_NOT_HOME
