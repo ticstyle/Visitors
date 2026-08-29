@@ -1,3 +1,4 @@
+# custom_components/visitors/sensor.py
 """Sensor platform for Visitors."""
 
 from __future__ import annotations
@@ -6,8 +7,10 @@ import logging
 from typing import Any
 
 from homeassistant.components.sensor import SensorEntity, SensorStateClass
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
@@ -66,16 +69,25 @@ class VisitorsSensor(SensorEntity):
         """Initialize the sensor."""
         self._config_entry = config_entry
         self._zone = zone
+        self._zone_slug = zone_slug
         self._trackers = trackers
         self._attr_unique_id = f"{config_entry.entry_id}_sensor"
 
         # Explicitly apply requested custom naming scheme
         self._attr_name = f"Visitors at {zone_name}"
         self.entity_id = f"sensor.visitors_at_{zone_slug}"
-        self._switch_entity_id = f"switch.visitors_at_{zone_slug}"
 
         self._zone_state_name = zone.split(".")[-1]
         self._state: int | None = None
+
+    def _get_switch_entity_id(self) -> str:
+        """Fetch the live companion switch entity ID from the entity registry."""
+        entity_reg = er.async_get(self.hass)
+        if switch_id := entity_reg.async_get_entity_id(
+            SWITCH_DOMAIN, DOMAIN, f"{self._config_entry.entry_id}_manual_switch"
+        ):
+            return switch_id
+        return f"switch.visitors_at_{self._zone_slug}"
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -109,8 +121,8 @@ class VisitorsSensor(SensorEntity):
             """Handle state changes of tracked entities and companion switch."""
             self.async_schedule_update_ha_state(True)
 
-        # Track both the physical entities and our manual helper switch state
-        entities_to_track = list(self._trackers) + [self._switch_entity_id]
+        # Track both the physical entities and our manual helper switch state dynamically resolved
+        entities_to_track = list(self._trackers) + [self._get_switch_entity_id()]
         self.async_on_remove(
             async_track_state_change_event(
                 self.hass, entities_to_track, async_state_changed_listener
@@ -125,8 +137,8 @@ class VisitorsSensor(SensorEntity):
             if state and state.state == self._zone_state_name:
                 count += 1
 
-        # Append manual override weight if switch is active
-        switch_state = self.hass.states.get(self._switch_entity_id)
+        # Append manual override weight if switch is active using dynamic entity resolution
+        switch_state = self.hass.states.get(self._get_switch_entity_id())
         if switch_state and switch_state.state == "on":
             count += 1
 
