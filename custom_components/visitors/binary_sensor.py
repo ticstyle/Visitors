@@ -1,3 +1,4 @@
+# custom_components/visitors/binary_sensor.py
 """Binary sensor platform for Visitors."""
 
 from __future__ import annotations
@@ -47,11 +48,12 @@ async def async_setup_entry(
     }
 
     for entry in registered_entries:
-        if entry.domain == "binary_sensor" and entry.unique_id.startswith(
-            f"{config_entry.entry_id}_binary_"
+        if (
+            entry.domain == "binary_sensor"
+            and entry.unique_id.startswith(f"{config_entry.entry_id}_binary_")
+            and entry.unique_id not in current_unique_ids
         ):
-            if entry.unique_id not in current_unique_ids:
-                entity_reg.async_remove(entry.entity_id)
+            entity_reg.async_remove(entry.entity_id)
 
     zone_state = hass.states.get(zone)
     zone_name = zone.split(".")[-1].replace("_", " ").title()
