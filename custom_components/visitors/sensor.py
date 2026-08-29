@@ -9,6 +9,7 @@ from typing import Any
 from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import STATE_HOME
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -77,7 +78,11 @@ class VisitorsSensor(SensorEntity):
         self._attr_name = f"Visitors at {zone_name}"
         self.entity_id = f"sensor.visitors_at_{zone_slug}"
 
-        self._zone_state_name = zone.split(".")[-1]
+        if zone == "zone.home" or zone.endswith(".home"):
+            self._zone_state_name = STATE_HOME
+        else:
+            self._zone_state_name = zone_name
+
         self._state: int | None = None
 
     def _get_switch_entity_id(self) -> str:
@@ -121,7 +126,7 @@ class VisitorsSensor(SensorEntity):
             """Handle state changes of tracked entities and companion switch."""
             self.async_schedule_update_ha_state(True)
 
-        # Track both the physical entities and our manual helper switch state dynamically resolved
+        # Track both physical entities and manual switch state dynamically
         entities_to_track = list(self._trackers) + [self._get_switch_entity_id()]
         self.async_on_remove(
             async_track_state_change_event(
@@ -137,7 +142,7 @@ class VisitorsSensor(SensorEntity):
             if state and state.state == self._zone_state_name:
                 count += 1
 
-        # Append manual override weight if switch is active using dynamic entity resolution
+        # Append manual override weight if switch is active
         switch_state = self.hass.states.get(self._get_switch_entity_id())
         if switch_state and switch_state.state == "on":
             count += 1
