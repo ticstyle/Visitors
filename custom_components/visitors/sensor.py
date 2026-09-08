@@ -9,12 +9,17 @@ from typing import Any
 from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_HOME
+from homeassistant.const import (
+    STATE_HOME,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.util import slugify
 
 from .const import CONF_TRACKERS, CONF_ZONE, DOMAIN
@@ -50,7 +55,7 @@ async def async_setup_entry(
     async_add_entities([sensor], update_before_add=True)
 
 
-class VisitorsSensor(SensorEntity):
+class VisitorsSensor(SensorEntity, RestoreEntity):
     """Representation of a Visitors Sensor."""
 
     _attr_has_entity_name = False
@@ -121,6 +126,15 @@ class VisitorsSensor(SensorEntity):
         """Handle entity which is about to be added to hass."""
         await super().async_added_to_hass()
 
+        # Restore last known visitor count across restarts
+        if (
+            old_state := await self.async_get_last_state()
+        ) is not None and old_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
+            try:
+                self._state = int(old_state.state)
+            except (ValueError, TypeError):
+                self._state = None
+
         @callback
         def async_state_changed_listener(event: Event[EventStateChangedData]) -> None:
             """Handle state changes of tracked entities and companion switch."""
@@ -133,6 +147,8 @@ class VisitorsSensor(SensorEntity):
                 self.hass, entities_to_track, async_state_changed_listener
             )
         )
+
+        self.async_schedule_update_ha_state(True)
 
     async def async_update(self) -> None:
         """Update the visitor count state."""
