@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from homeassistant.components.device_tracker import SourceType, TrackerEntity
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -84,6 +85,7 @@ class VisitorsVirtualTracker(TrackerEntity, RestoreEntity):
         self._attr_name = f"Visitors at {zone_name}"
         self.entity_id = f"device_tracker.visitors_at_{zone_slug}"
         self._attr_location_name = STATE_NOT_HOME
+        self._active = False
 
         if zone == "zone.home" or zone.endswith(".home"):
             self._zone_state_name = STATE_HOME
@@ -114,15 +116,30 @@ class VisitorsVirtualTracker(TrackerEntity, RestoreEntity):
         """Return the source type of the device."""
         return SourceType.ROUTER
 
+    @property
+    def in_zones(self) -> list[str]:
+        """Return the zones the device is currently in to drive native person tracking."""
+        if self._active:
+            return [self._zone]
+        return []
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return entity specific state attributes."""
+        return {
+            "in_zones": self.in_zones,
+        }
+
     async def async_added_to_hass(self) -> None:
         """Handle entity which is about to be added to hass."""
         await super().async_added_to_hass()
 
-        # Restore last known location name from state machine cache
+        # Restore last known location name and active status from cache
         if (
             old_state := await self.async_get_last_state()
         ) is not None and old_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
             self._attr_location_name = old_state.state
+            self._active = old_state.state == self._zone_state_name
 
         @callback
         def async_state_changed_listener(event: Event[EventStateChangedData]) -> None:
@@ -153,11 +170,13 @@ class VisitorsVirtualTracker(TrackerEntity, RestoreEntity):
                 tracker_in_zone = True
                 break
 
-        # Set location name according to target zone rules
+        # Set location name and active zone list according to target zone rules
         if switch_on or tracker_in_zone:
+            self._active = True
             if self._zone == "zone.home" or self._zone.endswith(".home"):
                 self._attr_location_name = STATE_HOME
             else:
                 self._attr_location_name = self._zone_name
         else:
+            self._active = False
             self._attr_location_name = STATE_NOT_HOME
