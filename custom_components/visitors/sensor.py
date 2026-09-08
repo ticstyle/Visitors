@@ -128,9 +128,8 @@ class VisitorsSensor(SensorEntity, RestoreEntity):
 
         # Restore last known visitor count across restarts
         if (
-            (old_state := await self.async_get_last_state()) is not None
-            and old_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
-        ):
+            old_state := await self.async_get_last_state()
+        ) is not None and old_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
             try:
                 self._state = int(old_state.state)
             except (ValueError, TypeError):
